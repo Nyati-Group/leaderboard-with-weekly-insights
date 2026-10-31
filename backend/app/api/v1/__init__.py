@@ -9,6 +9,7 @@ from app.api.v1.safety import router as safety_router
 from app.api.v1.actions import router as actions_router
 from app.api.v1.rankings import router as rankings_router
 from app.api.v1.weekly_insights import router as weekly_insights_router
+from app.api.v1.analytics import router as analytics_router
 
 api_v1_router = APIRouter()
 api_v1_router.include_router(health_router)
@@ -21,3 +22,4 @@ api_v1_router.include_router(safety_router)
 api_v1_router.include_router(actions_router)
 api_v1_router.include_router(rankings_router)
 api_v1_router.include_router(weekly_insights_router)
+api_v1_router.include_router(analytics_router)

@@ -38,6 +38,7 @@ import { FieldOperationsView } from './features/operations/FieldOperationsView';
 import { QualitySafetyActionsView } from './features/quality-safety/QualitySafetyActionsView';
 import { SiteLeaderboardView } from './features/rankings/SiteLeaderboardView';
 import { WeeklyInsightsView } from './features/weekly-insights/WeeklyInsightsView';
+import { AnalyticsAuditView } from './features/analytics/AnalyticsAuditView';
 
 const WORKSPACES = [
   { id: 'executive', name: 'Executive Overview', icon: LayoutDashboard, requiredRoles: ['ORG_ADMIN', 'EXEC_LEADERSHIP', 'PROJECT_CONTROLLER', 'SITE_MANAGER'] },
@@ -430,6 +431,11 @@ export function App() {
           ) : activeWorkspace === 'quality-safety' ? (
             <QualitySafetyActionsView
               siteId={selectedSiteId === 'ALL' ? (sites[0]?.id || 'CS-PUN-01') : selectedSiteId}
+              currentUser={currentUser}
+            />
+          ) : activeWorkspace === 'analytics-audit' ? (
+            <AnalyticsAuditView
+              siteId={selectedSiteId}
               currentUser={currentUser}
             />
           ) : (

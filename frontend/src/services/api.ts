@@ -561,4 +561,67 @@ export const fetchWeeklyReportVersionsApi = async (reportId: string): Promise<We
   return response.data;
 };
 
+// ==========================================
+// EVM & Excel Analytics Interfaces
+// ==========================================
+
+export interface SCurvePoint {
+  period: string;
+  pv: number;
+  ev?: number | null;
+  ac?: number | null;
+}
+
+export interface SiteEVMRecord {
+  site_id: string;
+  site_name: string;
+  budget_at_completion: number;
+  planned_value: number;
+  earned_value: number;
+  actual_cost: number;
+  schedule_performance_index: number;
+  cost_performance_index: number;
+  schedule_variance: number;
+  cost_variance: number;
+  estimate_at_completion: number;
+  variance_at_completion: number;
+  progress_pct: number;
+  health_status: 'EXCELLENT' | 'GOOD' | 'CRITICAL';
+  s_curve_points: SCurvePoint[];
+}
+
+export interface PortfolioEVMResponse {
+  portfolio_bac: number;
+  portfolio_pv: number;
+  portfolio_ev: number;
+  portfolio_ac: number;
+  portfolio_spi: number;
+  portfolio_cpi: number;
+  site_breakdown: SiteEVMRecord[];
+}
+
+export const fetchPortfolioEvm = async (): Promise<PortfolioEVMResponse> => {
+  const response = await apiClient.get<PortfolioEVMResponse>('/analytics/evm/portfolio');
+  return response.data;
+};
+
+export const fetchSiteEvm = async (siteId: string): Promise<SiteEVMRecord> => {
+  const response = await apiClient.get<SiteEVMRecord>(`/analytics/evm/sites/${siteId}`);
+  return response.data;
+};
+
+export const importExcelApi = async (file: File, siteId: string, dryRun: boolean): Promise<any> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('site_id', siteId);
+  formData.append('dry_run', dryRun ? 'true' : 'false');
+  const response = await apiClient.post('/analytics/excel/import', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data;
+};
+
+
 
