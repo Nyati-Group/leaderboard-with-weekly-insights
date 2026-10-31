@@ -437,3 +437,128 @@ export const fetchSiteRankingBreakdown = async (siteId: string, periodId: string
   return response.data;
 };
 
+// ==========================================
+// Construction Weekly Insights & Governance
+// ==========================================
+
+export interface WeeklyInsightItem {
+  id: string;
+  category: 'CRITICAL_RISK' | 'MANAGEMENT_PRIORITY' | 'SCHEDULE_SLIPPAGE' | 'MATERIAL_BOTTLENECK' | 'REGULATORY_HOLD';
+  title: string;
+  description: string;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  owner_name?: string;
+  target_date?: string;
+  status: 'OPEN' | 'MITIGATING' | 'RESOLVED';
+}
+
+export interface WeeklyDepartmentalInput {
+  id: string;
+  department: 'SAFETY' | 'QUALITY' | 'PLANNING' | 'COMMERCIAL';
+  author_id: string;
+  author_name?: string;
+  status: string;
+  narrative: string;
+  metrics_json?: Record<string, any>;
+  submitted_at: string;
+}
+
+export interface WeeklyReportReview {
+  id: string;
+  reviewer_id: string;
+  reviewer_name?: string;
+  decision: 'FLAGGED' | 'VALIDATED';
+  discrepancies_found?: string;
+  action_items?: string;
+  created_at: string;
+}
+
+export interface WeeklyReportVersion {
+  id: string;
+  version_number: number;
+  created_by: string;
+  creator_name?: string;
+  change_summary?: string;
+  created_at: string;
+}
+
+export interface WeeklyReportSummary {
+  id: string;
+  site_id: string;
+  site_name?: string;
+  week_code: string;
+  start_date: string;
+  end_date: string;
+  status: 'DRAFT' | 'INPUTS_PENDING' | 'SUBMITTED' | 'FLAGGED' | 'RESUBMITTED' | 'VALIDATED' | 'PUBLISHED';
+  current_version: number;
+  site_manager_id: string;
+  site_manager_name?: string;
+  executive_summary?: string;
+  published_at?: string;
+  published_by_name?: string;
+  created_at: string;
+}
+
+export interface WeeklyReportDetail extends WeeklyReportSummary {
+  top_achievements?: string;
+  critical_concerns?: string;
+  corporate_assistance_needed?: string;
+  departmental_inputs: WeeklyDepartmentalInput[];
+  insight_items: WeeklyInsightItem[];
+  reviews: WeeklyReportReview[];
+  versions: WeeklyReportVersion[];
+}
+
+export const fetchWeeklyReports = async (siteId?: string, weekCode?: string, status?: string): Promise<WeeklyReportSummary[]> => {
+  const params: Record<string, any> = {};
+  if (siteId && siteId !== 'ALL') params.site_id = siteId;
+  if (weekCode) params.week_code = weekCode;
+  if (status) params.status = status;
+  const response = await apiClient.get<WeeklyReportSummary[]>('/weekly-reports', { params });
+  return response.data;
+};
+
+export const fetchWeeklyReportById = async (reportId: string): Promise<WeeklyReportDetail> => {
+  const response = await apiClient.get<WeeklyReportDetail>(`/weekly-reports/${reportId}`);
+  return response.data;
+};
+
+export const createWeeklyReportApi = async (data: any): Promise<WeeklyReportDetail> => {
+  const response = await apiClient.post<WeeklyReportDetail>('/weekly-reports', data);
+  return response.data;
+};
+
+export const updateWeeklyReportApi = async (reportId: string, data: any): Promise<WeeklyReportDetail> => {
+  const response = await apiClient.put<WeeklyReportDetail>(`/weekly-reports/${reportId}`, data);
+  return response.data;
+};
+
+export const submitDepartmentalInputApi = async (reportId: string, data: any): Promise<WeeklyDepartmentalInput> => {
+  const response = await apiClient.post<WeeklyDepartmentalInput>(`/weekly-reports/${reportId}/departmental-input`, data);
+  return response.data;
+};
+
+export const submitWeeklyReportApi = async (reportId: string): Promise<WeeklyReportDetail> => {
+  const response = await apiClient.post<WeeklyReportDetail>(`/weekly-reports/${reportId}/submit`);
+  return response.data;
+};
+
+export const reviewWeeklyReportApi = async (
+  reportId: string, 
+  data: { decision: string; discrepancies_found?: string; action_items?: string }
+): Promise<WeeklyReportDetail> => {
+  const response = await apiClient.post<WeeklyReportDetail>(`/weekly-reports/${reportId}/review`, data);
+  return response.data;
+};
+
+export const publishWeeklyReportApi = async (reportId: string): Promise<WeeklyReportDetail> => {
+  const response = await apiClient.post<WeeklyReportDetail>(`/weekly-reports/${reportId}/publish`);
+  return response.data;
+};
+
+export const fetchWeeklyReportVersionsApi = async (reportId: string): Promise<WeeklyReportVersion[]> => {
+  const response = await apiClient.get<WeeklyReportVersion[]>(`/weekly-reports/${reportId}/versions`);
+  return response.data;
+};
+
+

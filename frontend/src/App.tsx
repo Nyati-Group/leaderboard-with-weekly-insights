@@ -37,6 +37,7 @@ import {
 import { FieldOperationsView } from './features/operations/FieldOperationsView';
 import { QualitySafetyActionsView } from './features/quality-safety/QualitySafetyActionsView';
 import { SiteLeaderboardView } from './features/rankings/SiteLeaderboardView';
+import { WeeklyInsightsView } from './features/weekly-insights/WeeklyInsightsView';
 
 const WORKSPACES = [
   { id: 'executive', name: 'Executive Overview', icon: LayoutDashboard, requiredRoles: ['ORG_ADMIN', 'EXEC_LEADERSHIP', 'PROJECT_CONTROLLER', 'SITE_MANAGER'] },
@@ -415,6 +416,11 @@ export function App() {
             <SiteLeaderboardView
               currentUser={currentUser}
               onSelectSite={(sId) => setSelectedSiteId(sId)}
+            />
+          ) : activeWorkspace === 'weekly-insights' ? (
+            <WeeklyInsightsView
+              siteId={selectedSiteId}
+              currentUser={currentUser}
             />
           ) : activeWorkspace === 'operations' ? (
             <FieldOperationsView 

@@ -33,6 +33,13 @@ from app.models.rankings import (
     RankingSnapshot,
     RankingScore
 )
+from app.models.weekly_insights import (
+    WeeklyReport,
+    WeeklyDepartmentalInput,
+    WeeklyReportVersion,
+    WeeklyReportReview,
+    WeeklyInsightItem
+)
 
 __all__ = [
     "Base",
@@ -74,5 +81,10 @@ __all__ = [
     "RankingMethodology",
     "RankingWeight",
     "RankingSnapshot",
-    "RankingScore"
+    "RankingScore",
+    "WeeklyReport",
+    "WeeklyDepartmentalInput",
+    "WeeklyReportVersion",
+    "WeeklyReportReview",
+    "WeeklyInsightItem"
 ]

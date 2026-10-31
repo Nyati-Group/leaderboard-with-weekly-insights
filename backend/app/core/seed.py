@@ -32,6 +32,13 @@ from app.models.rankings import (
     RankingSnapshot,
     RankingScore
 )
+from app.models.weekly_insights import (
+    WeeklyReport,
+    WeeklyDepartmentalInput,
+    WeeklyReportVersion,
+    WeeklyReportReview,
+    WeeklyInsightItem
+)
 from app.core.logging import logger
 
 ROLES_SEED = [
@@ -538,6 +545,63 @@ def seed_database():
                             vendor_name="National Steel & Cement",
                             invoice_ref=f"INV-{s_id}-{day_offset}"
                         ))
+
+        # 7. Seed Weekly Insights Reports
+        pune_manager = user_map.get("pm.pune@cld.com")
+        admin_user = user_map.get("admin@cld.com")
+        if pune_manager and admin_user:
+            existing_wr = db.query(WeeklyReport).filter(
+                WeeklyReport.site_id == "CS-PUN-01",
+                WeeklyReport.week_code == "2026-W43"
+            ).first()
+
+            if not existing_wr:
+                wr_prev = WeeklyReport(
+                    site_id="CS-PUN-01",
+                    week_code="2026-W43",
+                    start_date=date.today() - timedelta(days=14),
+                    end_date=date.today() - timedelta(days=7),
+                    status="PUBLISHED",
+                    current_version=1,
+                    site_manager_id=pune_manager.id,
+                    executive_summary="Solid foundation progress achieved during Week 43. Substructure columns poured on schedule with 100% human-audited safety compliance.",
+                    top_achievements="Zone 1 basement slab completed 2 days ahead of milestone. Concrete cube strengths exceeded 35 MPa.",
+                    critical_concerns="Ready-mix transit delays due to highway lane closure.",
+                    corporate_assistance_needed="Coordinate with regional logistics for cement dispatch priority.",
+                    published_at=date.today() - timedelta(days=6),
+                    published_by=admin_user.id
+                )
+                db.add(wr_prev)
+                db.flush()
+
+                db.add(WeeklyInsightItem(
+                    weekly_report_id=wr_prev.id,
+                    category="MANAGEMENT_PRIORITY",
+                    title="Procure heavy mobile crane for tower crane erection",
+                    description="250T telescopic crane required for week 46 mobilization.",
+                    severity="HIGH",
+                    owner_name="Plant & Machinery Lead",
+                    target_date=date.today() + timedelta(days=10),
+                    status="RESOLVED"
+                ))
+
+                db.add(WeeklyDepartmentalInput(
+                    weekly_report_id=wr_prev.id,
+                    department="SAFETY",
+                    author_id=user_map.get("safety.pune@cld.com", admin_user).id,
+                    status="SUBMITTED",
+                    narrative="Zero lost-time injuries. 100% of scaffold working platforms inspected with green tags posted.",
+                    metrics_json={"inspections": 3, "safe_observations": 14, "incidents": 0}
+                ))
+
+                db.add(WeeklyDepartmentalInput(
+                    weekly_report_id=wr_prev.id,
+                    department="QUALITY",
+                    author_id=user_map.get("quality.pune@cld.com", admin_user).id,
+                    status="SUBMITTED",
+                    narrative="All 16 structural pour checklists verified compliant. Rebar cover blocks 100% certified.",
+                    metrics_json={"checklists_passed": 16, "defects_rectified": 2, "open_ncrs": 0}
+                ))
 
         db.commit()
         logger.info("Database seeding completed successfully.")
