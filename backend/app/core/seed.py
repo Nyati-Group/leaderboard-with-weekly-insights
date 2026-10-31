@@ -1,7 +1,8 @@
 from datetime import date
 from sqlalchemy.orm import Session
 from app.core.database import SessionLocal
-from app.models.auth import Role, Permission
+from app.core.security import get_password_hash
+from app.models.auth import Role, Permission, User, SiteAssignment
 from app.models.sites import Site, SiteMetadata, ProjectBaseline, ProjectMilestone
 from app.core.logging import logger
 
@@ -101,6 +102,53 @@ SITES_SEED = [
     }
 ]
 
+USERS_SEED = [
+    {
+        "email": "admin@cld.com",
+        "full_name": "Global Organization Administrator",
+        "roles": ["ORG_ADMIN"],
+        "assigned_sites": []  # Global access
+    },
+    {
+        "email": "leadership@cld.com",
+        "full_name": "Director of Operations (Executive)",
+        "roles": ["EXEC_LEADERSHIP"],
+        "assigned_sites": []  # Global read-only
+    },
+    {
+        "email": "controller@cld.com",
+        "full_name": "Senior Project Controller",
+        "roles": ["PROJECT_CONTROLLER"],
+        "assigned_sites": []  # Multi-site validation
+    },
+    {
+        "email": "pm.pune@cld.com",
+        "full_name": "Rajesh Sharma (Site Manager Pune)",
+        "roles": ["SITE_MANAGER"],
+        "assigned_sites": [("CS-PUN-01", "SITE_MANAGER")]
+    },
+    {
+        "email": "safety.pune@cld.com",
+        "full_name": "Vikas Patil (Safety Officer Pune)",
+        "roles": ["SAFETY_OFFICER"],
+        "assigned_sites": [("CS-PUN-01", "SAFETY_OFFICER")]
+    },
+    {
+        "email": "quality.pune@cld.com",
+        "full_name": "Ananya Deshmukh (Quality Officer Pune)",
+        "roles": ["QUALITY_OFFICER"],
+        "assigned_sites": [("CS-PUN-01", "QUALITY_OFFICER")]
+    },
+    {
+        "email": "pm.mumbai@cld.com",
+        "full_name": "Amit Kulkarni (Site Manager Mumbai)",
+        "roles": ["SITE_MANAGER"],
+        "assigned_sites": [("CS-MUM-02", "SITE_MANAGER")]
+    }
+]
+
+DEFAULT_PASSWORD = "Construction@2026"
+
 def seed_database():
     db: Session = SessionLocal()
     try:
@@ -145,6 +193,37 @@ def seed_database():
                 )
                 db.add(baseline)
                 logger.info(f"Seeded site: {site.id} - {site.name}")
+
+        # 3. Seed Users & Site Assignments
+        hashed_pwd = get_password_hash(DEFAULT_PASSWORD)
+        for u_data in USERS_SEED:
+            user = db.query(User).filter(User.email == u_data["email"]).first()
+            if not user:
+                user = User(
+                    email=u_data["email"],
+                    full_name=u_data["full_name"],
+                    hashed_password=hashed_pwd,
+                    is_active=True
+                )
+                db.add(user)
+                db.flush()
+
+                # Assign roles
+                for r_id in u_data["roles"]:
+                    role = db.query(Role).filter(Role.id == r_id).first()
+                    if role:
+                        user.roles.append(role)
+
+                # Assign sites
+                for s_id, role_name in u_data["assigned_sites"]:
+                    assignment = SiteAssignment(
+                        user_id=user.id,
+                        site_id=s_id,
+                        assigned_role=role_name,
+                        is_active=True
+                    )
+                    db.add(assignment)
+                logger.info(f"Seeded user: {user.email} ({user.full_name})")
 
         db.commit()
         logger.info("Database seeding completed successfully.")

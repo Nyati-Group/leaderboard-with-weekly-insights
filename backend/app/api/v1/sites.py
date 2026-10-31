@@ -6,6 +6,7 @@ from datetime import date
 from app.core.database import get_db
 from app.models.sites import Site, SiteMetadata, ProjectBaseline
 from app.schemas.common import StandardResponse, ResponseMeta
+from app.api.deps import get_current_user, AuthenticatedUserContext
 
 router = APIRouter(prefix="/sites", tags=["Site Portfolio & Baselines"])
 
@@ -30,8 +31,17 @@ class SiteResponse(BaseModel):
     metadata: Optional[SiteMetadataSchema] = None
 
 @router.get("", response_model=StandardResponse[List[SiteResponse]])
-def list_sites(db: Session = Depends(get_db)):
-    sites = db.query(Site).order_by(Site.id).all()
+def list_sites(
+    db: Session = Depends(get_db),
+    current_user: AuthenticatedUserContext = Depends(get_current_user)
+):
+    query = db.query(Site)
+    
+    # Enforce site-level scoping for field roles
+    if not current_user.has_global_scope:
+        query = query.filter(Site.id.in_(current_user.assigned_site_ids))
+        
+    sites = query.order_by(Site.id).all()
     results = []
     for s in sites:
         meta = None
@@ -55,7 +65,18 @@ def list_sites(db: Session = Depends(get_db)):
     return StandardResponse(data=results, meta=ResponseMeta())
 
 @router.get("/{site_id}", response_model=StandardResponse[SiteResponse])
-def get_site(site_id: str, db: Session = Depends(get_db)):
+def get_site(
+    site_id: str,
+    db: Session = Depends(get_db),
+    current_user: AuthenticatedUserContext = Depends(get_current_user)
+):
+    # Verify horizontal authorization
+    if not current_user.can_access_site(site_id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Cross-site access denied: User {current_user.email} is not authorized for site {site_id}."
+        )
+
     s = db.query(Site).filter(Site.id == site_id).first()
     if not s:
         raise HTTPException(status_code=404, detail="Site not found")

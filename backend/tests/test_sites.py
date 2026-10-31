@@ -4,8 +4,16 @@ from app.main import app
 
 client = TestClient(app)
 
+def get_admin_token() -> str:
+    res = client.post("/api/v1/auth/login", json={
+        "email": "admin@cld.com",
+        "password": "Construction@2026"
+    })
+    return res.json()["data"]["access_token"]
+
 def test_list_sites():
-    response = client.get("/api/v1/sites")
+    token = get_admin_token()
+    response = client.get("/api/v1/sites", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 200
     res = response.json()
     assert res["success"] is True
@@ -19,7 +27,8 @@ def test_list_sites():
     assert "CS-NAG-05" in site_ids
 
 def test_get_single_site():
-    response = client.get("/api/v1/sites/CS-PUN-01")
+    token = get_admin_token()
+    response = client.get("/api/v1/sites/CS-PUN-01", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 200
     res = response.json()
     assert res["success"] is True
@@ -30,5 +39,6 @@ def test_get_single_site():
     assert site["metadata"]["contract_value"] == 1450000000.00
 
 def test_get_nonexistent_site():
-    response = client.get("/api/v1/sites/NON-EXISTENT")
+    token = get_admin_token()
+    response = client.get("/api/v1/sites/NON-EXISTENT", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 404
