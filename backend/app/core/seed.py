@@ -1,9 +1,17 @@
-from datetime import date
+from datetime import date, timedelta
 from sqlalchemy.orm import Session
 from app.core.database import SessionLocal
 from app.core.security import get_password_hash
 from app.models.auth import Role, Permission, User, SiteAssignment
 from app.models.sites import Site, SiteMetadata, ProjectBaseline, ProjectMilestone
+from app.models.operations import (
+    DailyReport,
+    DailyReportVersion,
+    ProgressRecord,
+    ManpowerRecord,
+    ExpenditureRecord,
+    ActivityRecord
+)
 from app.core.logging import logger
 
 ROLES_SEED = [
@@ -196,6 +204,7 @@ def seed_database():
 
         # 3. Seed Users & Site Assignments
         hashed_pwd = get_password_hash(DEFAULT_PASSWORD)
+        user_map = {}
         for u_data in USERS_SEED:
             user = db.query(User).filter(User.email == u_data["email"]).first()
             if not user:
@@ -223,7 +232,69 @@ def seed_database():
                         is_active=True
                     )
                     db.add(assignment)
-                logger.info(f"Seeded user: {user.email} ({user.full_name})")
+                logger.info(f"Seeded user: {user.email}")
+            user_map[user.email] = user
+
+        # 4. Seed Historical Daily Reports for Pune (CS-PUN-01) for past 5 days
+        pune_manager = user_map.get("pm.pune@cld.com")
+        if pune_manager:
+            for day_offset in range(1, 6):
+                rep_date = date.today() - timedelta(days=day_offset)
+                existing_rep = db.query(DailyReport).filter(
+                    DailyReport.site_id == "CS-PUN-01",
+                    DailyReport.reporting_date == rep_date
+                ).first()
+
+                if not existing_rep:
+                    rep = DailyReport(
+                        site_id="CS-PUN-01",
+                        reporting_date=rep_date,
+                        status="VALIDATED",
+                        current_version=1,
+                        submitted_by=pune_manager.id,
+                        site_manager_remarks=f"Floor work day -{day_offset} completed in full coordination."
+                    )
+                    db.add(rep)
+                    db.flush()
+
+                    db.add(ProgressRecord(
+                        daily_report_id=rep.id,
+                        site_id="CS-PUN-01",
+                        work_package="Superstructure",
+                        activity_name="Slab Concrete Pouring",
+                        unit_of_measure="cum",
+                        planned_quantity=50.0,
+                        actual_quantity=48.5,
+                        cumulative_quantity=200.0 + (day_offset * 48.0)
+                    ))
+
+                    db.add(ManpowerRecord(
+                        daily_report_id=rep.id,
+                        site_id="CS-PUN-01",
+                        trade_category="Carpenters & Formwork",
+                        contractor_name="Sterling Infra",
+                        planned_count=20,
+                        actual_count=19,
+                        overtime_hours=1.5
+                    ))
+
+                    db.add(ExpenditureRecord(
+                        daily_report_id=rep.id,
+                        site_id="CS-PUN-01",
+                        cost_code="MAT-CONC-01",
+                        category="Materials",
+                        planned_amount=320000.0,
+                        actual_amount=315000.0,
+                        vendor_name="UltraTech Cement",
+                        invoice_ref=f"INV-PUN-{day_offset}"
+                    ))
+
+                    db.add(ActivityRecord(
+                        daily_report_id=rep.id,
+                        site_id="CS-PUN-01",
+                        name="Pre-pour rebar inspection",
+                        status="COMPLETED"
+                    ))
 
         db.commit()
         logger.info("Database seeding completed successfully.")

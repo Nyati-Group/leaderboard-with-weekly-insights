@@ -2,6 +2,14 @@ from app.core.database import Base
 from app.models.base import TimestampMixin, GUID
 from app.models.auth import Role, Permission, User, SiteAssignment, RefreshToken, role_permissions, user_roles
 from app.models.sites import Site, SiteMetadata, SiteContextAssessment, ProjectBaseline, ProjectMilestone
+from app.models.operations import (
+    DailyReport,
+    DailyReportVersion,
+    ProgressRecord,
+    ManpowerRecord,
+    ExpenditureRecord,
+    ActivityRecord
+)
 
 __all__ = [
     "Base",
@@ -19,4 +27,10 @@ __all__ = [
     "SiteContextAssessment",
     "ProjectBaseline",
     "ProjectMilestone",
+    "DailyReport",
+    "DailyReportVersion",
+    "ProgressRecord",
+    "ManpowerRecord",
+    "ExpenditureRecord",
+    "ActivityRecord"
 ]
