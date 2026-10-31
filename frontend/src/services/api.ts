@@ -146,12 +146,108 @@ export interface VersionSnapshot {
   created_at: string;
 }
 
+// Quality & Safety Interfaces
+export interface QualityChecklistItem {
+  id?: string;
+  parameter: string;
+  is_compliant: boolean;
+  comments?: string;
+}
+
+export interface QualityInspection {
+  id: string;
+  site_id: string;
+  inspection_date: string;
+  inspector_id: string;
+  inspection_type: string;
+  wbs_location: string;
+  outcome: string;
+  remarks?: string;
+  checklist_items: QualityChecklistItem[];
+}
+
+export interface NCRRecord {
+  id: string;
+  site_id: string;
+  ncr_number: string;
+  issued_to: string;
+  root_cause?: string;
+  corrective_action_required?: string;
+  status: string;
+  closure_date?: string;
+  rework_cost: number;
+  delay_days: number;
+}
+
+export interface SafetyChecklistItem {
+  id?: string;
+  category: string;
+  item_description: string;
+  is_compliant: boolean;
+  severity: string;
+  corrective_action_required: boolean;
+}
+
+export interface SafetyInspection {
+  id: string;
+  site_id: string;
+  inspection_date: string;
+  inspector_id: string;
+  inspection_type: string;
+  compliance_score_pct: number;
+  remarks?: string;
+  checklist_items: SafetyChecklistItem[];
+}
+
+export interface SafetyObservation {
+  id: string;
+  site_id: string;
+  observer_id: string;
+  observation_date: string;
+  category: string;
+  severity: string;
+  description: string;
+  status: string;
+}
+
+export interface SafetyIncident {
+  id: string;
+  site_id: string;
+  incident_date: string;
+  severity: string;
+  title: string;
+  description: string;
+  injured_count: number;
+  lost_time_hours: number;
+  root_cause?: string;
+  status: string;
+}
+
+export interface CorrectiveActionItem {
+  id: string;
+  site_id: string;
+  source_type: string;
+  source_id?: string;
+  title: string;
+  description: string;
+  priority: string;
+  due_date: string;
+  status: string;
+  created_by: string;
+  created_at: string;
+  status_history: Array<{
+    id: string;
+    old_status: string;
+    new_status: string;
+    changed_by: string;
+    notes?: string;
+    created_at: string;
+  }>;
+}
+
 // Auth APIs
 export const loginApi = async (email: string, password: string): Promise<LoginResult> => {
-  const response = await apiClient.post<ApiResponse<LoginResult>>('/auth/login', {
-    email,
-    password,
-  });
+  const response = await apiClient.post<ApiResponse<LoginResult>>('/auth/login', { email, password });
   const data = response.data.data;
   localStorage.setItem('cld_access_token', data.access_token);
   localStorage.setItem('cld_refresh_token', data.refresh_token);
@@ -202,19 +298,6 @@ export const fetchDailyReportDetail = async (reportId: string): Promise<DailyRep
   return response.data.data;
 };
 
-export const saveDailyReportDraft = async (payload: {
-  site_id: string;
-  reporting_date: string;
-  site_manager_remarks?: string;
-  progress_records: ProgressItem[];
-  manpower_records: ManpowerItem[];
-  expenditure_records: ExpenditureItem[];
-  activity_records: ActivityItem[];
-}): Promise<DailyReportDetail> => {
-  const response = await apiClient.post<ApiResponse<DailyReportDetail>>('/daily-reports', payload);
-  return response.data.data;
-};
-
 export const submitDailyReport = async (reportId: string): Promise<DailyReportDetail> => {
   const response = await apiClient.post<ApiResponse<DailyReportDetail>>(`/daily-reports/${reportId}/submit`);
   return response.data.data;
@@ -222,5 +305,52 @@ export const submitDailyReport = async (reportId: string): Promise<DailyReportDe
 
 export const fetchReportVersions = async (reportId: string): Promise<VersionSnapshot[]> => {
   const response = await apiClient.get<ApiResponse<VersionSnapshot[]>>(`/daily-reports/${reportId}/versions`);
+  return response.data.data;
+};
+
+// Quality APIs
+export const fetchQualityInspections = async (siteId?: string): Promise<QualityInspection[]> => {
+  const params = siteId && siteId !== 'ALL' ? { site_id: siteId } : {};
+  const response = await apiClient.get<ApiResponse<QualityInspection[]>>('/quality/inspections', { params });
+  return response.data.data;
+};
+
+export const fetchNCRs = async (siteId?: string): Promise<NCRRecord[]> => {
+  const params = siteId && siteId !== 'ALL' ? { site_id: siteId } : {};
+  const response = await apiClient.get<ApiResponse<NCRRecord[]>>('/quality/ncrs', { params });
+  return response.data.data;
+};
+
+// Safety APIs
+export const fetchSafetyInspections = async (siteId?: string): Promise<SafetyInspection[]> => {
+  const params = siteId && siteId !== 'ALL' ? { site_id: siteId } : {};
+  const response = await apiClient.get<ApiResponse<SafetyInspection[]>>('/safety/inspections', { params });
+  return response.data.data;
+};
+
+export const fetchSafetyObservations = async (siteId?: string): Promise<SafetyObservation[]> => {
+  const params = siteId && siteId !== 'ALL' ? { site_id: siteId } : {};
+  const response = await apiClient.get<ApiResponse<SafetyObservation[]>>('/safety/observations', { params });
+  return response.data.data;
+};
+
+export const fetchSafetyIncidents = async (siteId?: string): Promise<SafetyIncident[]> => {
+  const params = siteId && siteId !== 'ALL' ? { site_id: siteId } : {};
+  const response = await apiClient.get<ApiResponse<SafetyIncident[]>>('/safety/incidents', { params });
+  return response.data.data;
+};
+
+// Corrective Action APIs
+export const fetchCorrectiveActions = async (siteId?: string): Promise<CorrectiveActionItem[]> => {
+  const params = siteId && siteId !== 'ALL' ? { site_id: siteId } : {};
+  const response = await apiClient.get<ApiResponse<CorrectiveActionItem[]>>('/actions', { params });
+  return response.data.data;
+};
+
+export const updateActionStatusApi = async (actionId: string, newStatus: string, notes?: string): Promise<CorrectiveActionItem> => {
+  const response = await apiClient.put<ApiResponse<CorrectiveActionItem>>(`/actions/${actionId}/status`, {
+    new_status: newStatus,
+    notes,
+  });
   return response.data.data;
 };

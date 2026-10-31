@@ -19,8 +19,8 @@ The application maintains strict boundaries across 11 discrete business domains:
    - Daily construction progress, workforce attendance, machinery, daily expenditure, immutable version history.
 4. **Quality Management (`app.models.quality`, `app.api.v1.quality`)**:
    - Inspections, checklists, defect logs, Non-Conformance Reports (NCRs), rework cost/delay tracking.
-5. **Safety Management & Computer Vision (`app.models.safety`, `app.api.v1.safety`)**:
-   - Field observations, AI CCTV hazard detections (`DETECTED`, `PENDING_REVIEW`, `CONFIRMED`, `REJECTED`, `RESOLVED`), human safety officer verification, confirmed incidents, evidence vaults.
+5. **Safety Management (`app.models.safety`, `app.api.v1.safety`)**:
+   - Field observations, safety inspections, compliance checklists, human-reported safety incidents, lost-time tracking, evidence vaults.
 6. **Corrective Action Center (`app.models.actions`, `app.api.v1.actions`)**:
    - Centralized issue tracking originating from safety, quality, or audit sources. Status transitions, assignments, closure audits.
 7. **Weekly Insights & Governance (`app.models.weekly`, `app.api.v1.weekly_reports`)**:

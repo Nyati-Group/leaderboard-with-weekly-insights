@@ -35,6 +35,7 @@ import {
   type UserProfile
 } from './services/api';
 import { FieldOperationsView } from './features/operations/FieldOperationsView';
+import { QualitySafetyActionsView } from './features/quality-safety/QualitySafetyActionsView';
 
 const WORKSPACES = [
   { id: 'executive', name: 'Executive Overview', icon: LayoutDashboard, requiredRoles: ['ORG_ADMIN', 'EXEC_LEADERSHIP', 'PROJECT_CONTROLLER', 'SITE_MANAGER'] },
@@ -413,6 +414,11 @@ export function App() {
             <FieldOperationsView 
               siteId={selectedSiteId === 'ALL' ? (sites[0]?.id || 'CS-PUN-01') : selectedSiteId} 
               currentUser={currentUser} 
+            />
+          ) : activeWorkspace === 'quality-safety' ? (
+            <QualitySafetyActionsView
+              siteId={selectedSiteId === 'ALL' ? (sites[0]?.id || 'CS-PUN-01') : selectedSiteId}
+              currentUser={currentUser}
             />
           ) : (
             <>

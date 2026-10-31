@@ -16,7 +16,7 @@ The Construction Site Leadership Dashboard consolidates operational progress, ex
   2. *Site Leaderboard & Portfolio*: 8-KRA transparent performance comparison and ranking.
   3. *Weekly Insights*: Governance workflow (Site Manager -> Controller -> Organization Admin).
   4. *Field Operations*: Daily progress, manpower, expenditure, and versioned report submissions.
-  5. *Quality, Safety & Actions*: Human-verified CCTV hazard detections, NCRs, and corrective actions.
+  5. *Quality, Safety & Actions*: Manual safety inspections, observations, NCRs, and corrective actions.
   6. *Analytics & Audit Ledger*: Excel import validation, EVM analytics, and append-only audit trail.
 - **AI Construction Assistant**: Grounded in structured database metrics and approved site documents.
 - **Configured Initial Sites**:
@@ -98,7 +98,7 @@ npm run build
 - [x] **Phase 1:** Monorepo structure, FastAPI backend, React 19 / TypeScript frontend, Tailwind CSS v4, PostgreSQL/Alembic schema migrations, health checks, seed script, automated test suite, GitHub Actions CI.
 - [ ] **Phase 2:** Authentication, JWT session management, 3-tier RBAC enforcement, and user management.
 - [ ] **Phase 3:** Site portfolio management and daily field operations.
-- [ ] **Phase 4:** Quality, safety, CCTV human verification, and corrective actions center.
+- [ ] **Phase 4:** Quality, safety inspections, incident tracking, and corrective actions center.
 - [ ] **Phase 5:** Authoritative Eight-KRA ranking engine.
 - [ ] **Phase 6:** Weekly insights and governance workflow.
 - [ ] **Phase 7:** Excel spreadsheet import engine and EVM analytics.

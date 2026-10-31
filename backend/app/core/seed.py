@@ -38,7 +38,7 @@ ROLES_SEED = [
     {
         "id": "SAFETY_OFFICER",
         "name": "Safety Officer",
-        "description": "Field safety authority for assigned site. Logs observations, verifies AI CCTV hazard detections, submits safety inputs."
+        "description": "Field safety authority for assigned site. Conducts safety inspections, logs observations, records incidents, and submits safety inputs."
     },
     {
         "id": "QUALITY_OFFICER",

@@ -10,6 +10,22 @@ from app.models.operations import (
     ExpenditureRecord,
     ActivityRecord
 )
+from app.models.quality_safety import (
+    QualityInspection,
+    QualityChecklistItem,
+    QualityDefect,
+    NCRRecord,
+    ReworkRecord,
+    SafetyInspection,
+    SafetyChecklistItem,
+    SafetyObservation,
+    SafetyIncident,
+    SafetyEvidence,
+    CorrectiveAction,
+    ActionAssignment,
+    ActionComment,
+    ActionStatusHistory
+)
 
 __all__ = [
     "Base",
@@ -32,5 +48,19 @@ __all__ = [
     "ProgressRecord",
     "ManpowerRecord",
     "ExpenditureRecord",
-    "ActivityRecord"
+    "ActivityRecord",
+    "QualityInspection",
+    "QualityChecklistItem",
+    "QualityDefect",
+    "NCRRecord",
+    "ReworkRecord",
+    "SafetyInspection",
+    "SafetyChecklistItem",
+    "SafetyObservation",
+    "SafetyIncident",
+    "SafetyEvidence",
+    "CorrectiveAction",
+    "ActionAssignment",
+    "ActionComment",
+    "ActionStatusHistory"
 ]

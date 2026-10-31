@@ -11,6 +11,21 @@ def get_token(email: str) -> str:
     return res.json()["data"]["access_token"]
 
 def test_daily_report_lifecycle_and_governance():
+    from app.core.database import SessionLocal
+    from app.models.operations import DailyReport
+    
+    # Clean up test date record if left from previous runs
+    test_date = date(2026, 10, 20)
+    db = SessionLocal()
+    existing = db.query(DailyReport).filter(
+        DailyReport.site_id == "CS-PUN-01",
+        DailyReport.reporting_date == test_date
+    ).first()
+    if existing:
+        db.delete(existing)
+        db.commit()
+    db.close()
+
     pune_sm_token = get_token("pm.pune@cld.com")
     mumbai_sm_token = get_token("pm.mumbai@cld.com")
     controller_token = get_token("controller@cld.com")

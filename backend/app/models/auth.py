@@ -33,7 +33,7 @@ class Role(Base):
 class Permission(Base):
     __tablename__ = "permissions"
 
-    id = Column(String(80), primary_key=True)  # e.g., 'reports:view_all', 'cctv:review_decision', 'weekly:publish'
+    id = Column(String(80), primary_key=True)  # e.g., 'reports:view_all', 'actions:verify', 'weekly:publish'
     module = Column(String(50), nullable=False)
     description = Column(Text, nullable=True)
 
