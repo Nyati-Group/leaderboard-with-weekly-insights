@@ -26,6 +26,13 @@ from app.models.quality_safety import (
     ActionComment,
     ActionStatusHistory
 )
+from app.models.rankings import (
+    KRADefinition,
+    RankingMethodology,
+    RankingWeight,
+    RankingSnapshot,
+    RankingScore
+)
 
 __all__ = [
     "Base",
@@ -62,5 +69,10 @@ __all__ = [
     "CorrectiveAction",
     "ActionAssignment",
     "ActionComment",
-    "ActionStatusHistory"
+    "ActionStatusHistory",
+    "KRADefinition",
+    "RankingMethodology",
+    "RankingWeight",
+    "RankingSnapshot",
+    "RankingScore"
 ]

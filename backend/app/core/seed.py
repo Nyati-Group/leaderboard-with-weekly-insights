@@ -12,6 +12,26 @@ from app.models.operations import (
     ExpenditureRecord,
     ActivityRecord
 )
+from app.models.quality_safety import (
+    QualityInspection,
+    QualityChecklistItem,
+    QualityDefect,
+    NCRRecord,
+    ReworkRecord,
+    SafetyInspection,
+    SafetyChecklistItem,
+    SafetyObservation,
+    SafetyIncident,
+    CorrectiveAction,
+    ActionAssignment
+)
+from app.models.rankings import (
+    KRADefinition,
+    RankingMethodology,
+    RankingWeight,
+    RankingSnapshot,
+    RankingScore
+)
 from app.core.logging import logger
 
 ROLES_SEED = [
@@ -295,6 +315,229 @@ def seed_database():
                         name="Pre-pour rebar inspection",
                         status="COMPLETED"
                     ))
+
+        # 5. Seed KRA Definitions & Default Approved Methodology v1.0
+        kra_data = [
+            (1, "PROGRESS", "Construction Progress", "Weighted physical progress vs baseline across all active work packages.", False),
+            (2, "MANPOWER", "Manpower Deployment & Productivity", "Actual labor attendance vs planned trade allocation and planned output.", False),
+            (3, "COST", "Cost & Expenditure Control", "Expenditure variance, material procurement efficiency, and budget adherence.", False),
+            (4, "SCHEDULE", "Schedule & Milestone Adherence", "Timely completion of critical path milestones and delay recovery.", False),
+            (5, "QUALITY", "Work Quality & Defect Prevention", "Quality inspection checklist pass rates, NCR severity, and rework cost control.", False),
+            (6, "SAFETY", "Safety Compliance & Incident Prevention", "Human-audited safety checklist score, zero-incident track record, and verified hazard mitigation.", False),
+            (7, "CLOSURE", "Task & Corrective Action Closure", "On-time resolution and closure rate of corrective actions and flagged operational items.", False),
+            (8, "OVERALL", "Overall Site Performance Index", "Transparent composite performance index calculated from official KRA 1-7 weights.", True)
+        ]
+
+        for kra_id, code, name, desc, is_comp in kra_data:
+            existing_kra = db.query(KRADefinition).filter(KRADefinition.id == kra_id).first()
+            if not existing_kra:
+                db.add(KRADefinition(
+                    id=kra_id,
+                    code=code,
+                    name=name,
+                    description=desc,
+                    is_composite=is_comp
+                ))
+
+        db.flush()
+
+        # Seed Methodology v1.0
+        admin_user = user_map.get("admin@cld.com")
+        existing_meth = db.query(RankingMethodology).filter(RankingMethodology.version_code == "v1.0").first()
+        if not existing_meth:
+            meth = RankingMethodology(
+                version_code="v1.0",
+                name="Corporate Standard 8-KRA Methodology",
+                is_active=True,
+                approved_by=admin_user.id if admin_user else None,
+                approved_at=date.today(),
+                rationale="Standard organizational ranking weights prioritizing Progress (20%), Cost (20%), Manpower (15%), and Schedule (15%)."
+            )
+            db.add(meth)
+            db.flush()
+
+            # Weights: 1: 20%, 2: 15%, 3: 20%, 4: 15%, 5: 10%, 6: 10%, 7: 10%
+            weights_data = [
+                (1, 20.0),
+                (2, 15.0),
+                (3, 20.0),
+                (4, 15.0),
+                (5, 10.0),
+                (6, 10.0),
+                (7, 10.0)
+            ]
+            for kid, wpct in weights_data:
+                db.add(RankingWeight(
+                    methodology_id=meth.id,
+                    kra_id=kid,
+                    weight_pct=wpct
+                ))
+            logger.info("Seeded Ranking Methodology v1.0 with official 8-KRA weights.")
+
+        # 6. Seed Milestones, Quality, Safety & Actions across all sites for rich testing
+        for site_info in SITES_SEED:
+            s_id = site_info["id"]
+            # Seed project milestones if none exist
+            baseline = db.query(ProjectBaseline).filter(ProjectBaseline.site_id == s_id, ProjectBaseline.is_active == True).first()
+            if baseline:
+                existing_ms = db.query(ProjectMilestone).filter(ProjectMilestone.baseline_id == baseline.id).first()
+                if not existing_ms:
+                    db.add(ProjectMilestone(
+                        baseline_id=baseline.id,
+                        name="Foundation & Piling Complete",
+                        sequence_order=1,
+                        target_date=site_info["start_date"] + timedelta(days=90),
+                        actual_date=site_info["start_date"] + timedelta(days=88),
+                        weightage_pct=25.0,
+                        status="COMPLETED"
+                    ))
+                    db.add(ProjectMilestone(
+                        baseline_id=baseline.id,
+                        name="Basement & Substructure Works",
+                        sequence_order=2,
+                        target_date=site_info["start_date"] + timedelta(days=180),
+                        actual_date=None,
+                        weightage_pct=35.0,
+                        status="COMPLETED" if s_id in ["CS-PUN-01", "CS-NAG-05"] else "PENDING"
+                    ))
+
+            # Seed quality inspections & checklists
+            existing_qi = db.query(QualityInspection).filter(QualityInspection.site_id == s_id).first()
+            if not existing_qi and admin_user:
+                qi = QualityInspection(
+                    site_id=s_id,
+                    inspection_date=date.today() - timedelta(days=2),
+                    inspector_id=admin_user.id,
+                    inspection_type="Pre-pour Concrete Inspection",
+                    wbs_location="Tower 1 - Floor 3 - Grid B4-C8",
+                    outcome="PASS" if s_id != "CS-MUM-02" else "FAIL",
+                    remarks="Standard structural reinforcement verification completed."
+                )
+                db.add(qi)
+                db.flush()
+
+                db.add(QualityChecklistItem(
+                    inspection_id=qi.id,
+                    parameter="Rebar diameter, spacing and cover block verification",
+                    is_compliant=True,
+                    comments="Compliant with structural drawings"
+                ))
+                db.add(QualityChecklistItem(
+                    inspection_id=qi.id,
+                    parameter="Formwork alignment, tightness and prop stability",
+                    is_compliant=True if s_id != "CS-MUM-02" else False,
+                    comments="Minor alignment deviation detected at grid B5" if s_id == "CS-MUM-02" else "Within tolerance"
+                ))
+
+            # Seed safety inspection & observations
+            existing_si = db.query(SafetyInspection).filter(SafetyInspection.site_id == s_id).first()
+            if not existing_si and admin_user:
+                si = SafetyInspection(
+                    site_id=s_id,
+                    inspection_date=date.today() - timedelta(days=1),
+                    inspector_id=admin_user.id,
+                    inspection_type="WEEKLY_AUDIT",
+                    compliance_score_pct=100.0 if s_id != "CS-NAS-03" else 90.0,
+                    remarks="Human-audited site safety inspection walkthrough."
+                )
+                db.add(si)
+                db.flush()
+
+                db.add(SafetyChecklistItem(
+                    safety_inspection_id=si.id,
+                    category="PPE_COMPLIANCE",
+                    item_description="Proper manual PPE gear (hard hat, high-vis vest, safety boots) checked on-site",
+                    is_compliant=True,
+                    severity="LOW",
+                    corrective_action_required=False,
+                    comments="All crew verified compliant during shift start audit"
+                ))
+                db.add(SafetyChecklistItem(
+                    safety_inspection_id=si.id,
+                    category="SCAFFOLDING",
+                    item_description="Scaffold tagging, bracing and toe boards compliant",
+                    is_compliant=True if s_id != "CS-NAS-03" else False,
+                    severity="MEDIUM" if s_id == "CS-NAS-03" else "LOW",
+                    corrective_action_required=True if s_id == "CS-NAS-03" else False,
+                    comments="Toe board missing on east facade scaffold" if s_id == "CS-NAS-03" else "Green tag verified"
+                ))
+
+                db.add(SafetyObservation(
+                    site_id=s_id,
+                    observer_id=admin_user.id,
+                    observation_date=date.today() - timedelta(days=1),
+                    category="Working at Height",
+                    severity="LOW",
+                    description="Guardrails and toe-boards inspected and verified compliant.",
+                    status="RESOLVED" if s_id != "CS-NAS-03" else "REPORTED"
+                ))
+
+            # Seed corrective action
+            existing_ca = db.query(CorrectiveAction).filter(CorrectiveAction.site_id == s_id).first()
+            if not existing_ca and admin_user:
+                ca = CorrectiveAction(
+                    site_id=s_id,
+                    source_type="SAFETY_OBSERVATION",
+                    title="Install edge protection barrier mesh",
+                    description="Ensure safety net and edge barriers are fastened securely on perimeter.",
+                    priority="HIGH" if s_id == "CS-NAS-03" else "MEDIUM",
+                    due_date=date.today() + timedelta(days=3),
+                    status="CLOSED" if s_id in ["CS-PUN-01", "CS-NAG-05"] else "IN_PROGRESS",
+                    created_by=admin_user.id
+                )
+                db.add(ca)
+
+            # Seed daily reports for CS-MUM-02, CS-NAS-03, CS-REM-04, CS-NAG-05 if not existing
+            if s_id != "CS-PUN-01":
+                for day_offset in range(1, 4):
+                    rep_date = date.today() - timedelta(days=day_offset)
+                    existing_rep = db.query(DailyReport).filter(
+                        DailyReport.site_id == s_id,
+                        DailyReport.reporting_date == rep_date
+                    ).first()
+                    if not existing_rep and admin_user:
+                        rep = DailyReport(
+                            site_id=s_id,
+                            reporting_date=rep_date,
+                            status="VALIDATED",
+                            current_version=1,
+                            submitted_by=admin_user.id,
+                            site_manager_remarks=f"Daily operations log for {s_id}."
+                        )
+                        db.add(rep)
+                        db.flush()
+
+                        db.add(ProgressRecord(
+                            daily_report_id=rep.id,
+                            site_id=s_id,
+                            work_package="Substructure Works",
+                            activity_name="Reinforcement & Shuttering",
+                            unit_of_measure="sqm",
+                            planned_quantity=60.0,
+                            actual_quantity=58.0 if s_id != "CS-REM-04" else 42.0,
+                            cumulative_quantity=180.0 + (day_offset * 50.0)
+                        ))
+
+                        db.add(ManpowerRecord(
+                            daily_report_id=rep.id,
+                            site_id=s_id,
+                            trade_category="Masonry & Civil",
+                            contractor_name="Prime Builders",
+                            planned_count=25,
+                            actual_count=24 if s_id != "CS-REM-04" else 18,
+                            overtime_hours=0.0
+                        ))
+
+                        db.add(ExpenditureRecord(
+                            daily_report_id=rep.id,
+                            site_id=s_id,
+                            cost_code="MAT-CIV-01",
+                            category="Materials",
+                            planned_amount=250000.0,
+                            actual_amount=248000.0 if s_id != "CS-MUM-02" else 285000.0,
+                            vendor_name="National Steel & Cement",
+                            invoice_ref=f"INV-{s_id}-{day_offset}"
+                        ))
 
         db.commit()
         logger.info("Database seeding completed successfully.")

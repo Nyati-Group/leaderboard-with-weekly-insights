@@ -354,3 +354,86 @@ export const updateActionStatusApi = async (actionId: string, newStatus: string,
   });
   return response.data.data;
 };
+
+// ==========================================
+// 8-KRA Authoritative Rankings
+// ==========================================
+
+export interface KRADefinition {
+  id: number;
+  code: string;
+  name: string;
+  description: string;
+  is_composite: boolean;
+}
+
+export interface RankingWeight {
+  kra_id: number;
+  weight_pct: number;
+  kra?: KRADefinition;
+}
+
+export interface RankingMethodology {
+  id: string;
+  version_code: string;
+  name: string;
+  is_active: boolean;
+  approved_at?: string;
+  rationale?: string;
+  weights: RankingWeight[];
+}
+
+export interface RankingScore {
+  kra_id: number;
+  raw_score?: number | null;
+  weighted_score?: number | null;
+  is_missing: boolean;
+  details_json?: Record<string, any>;
+}
+
+export interface RankingSnapshot {
+  id: string;
+  site_id: string;
+  site_name?: string;
+  period_id: string;
+  composite_score?: number | null;
+  data_completeness_pct: number;
+  is_stale: boolean;
+  ranking_position?: number | null;
+  status: 'OFFICIAL' | 'PROVISIONAL' | 'INSUFFICIENT_DATA';
+  calculated_at: string;
+  scores: RankingScore[];
+}
+
+export const fetchLeaderboard = async (periodId: string = '2026-W44'): Promise<RankingSnapshot[]> => {
+  const response = await apiClient.get<RankingSnapshot[]>('/rankings/leaderboard', {
+    params: { period_id: periodId }
+  });
+  return response.data;
+};
+
+export const calculateLeaderboard = async (periodId: string = '2026-W44', methodologyId?: string): Promise<RankingSnapshot[]> => {
+  const response = await apiClient.post<RankingSnapshot[]>('/rankings/calculate', {
+    period_id: periodId,
+    methodology_id: methodologyId
+  });
+  return response.data;
+};
+
+export const fetchActiveMethodology = async (): Promise<RankingMethodology> => {
+  const response = await apiClient.get<RankingMethodology>('/rankings/methodologies/active');
+  return response.data;
+};
+
+export const fetchKRADefinitions = async (): Promise<KRADefinition[]> => {
+  const response = await apiClient.get<KRADefinition[]>('/rankings/definitions');
+  return response.data;
+};
+
+export const fetchSiteRankingBreakdown = async (siteId: string, periodId: string = '2026-W44'): Promise<RankingSnapshot> => {
+  const response = await apiClient.get<RankingSnapshot>(`/rankings/sites/${siteId}/breakdown`, {
+    params: { period_id: periodId }
+  });
+  return response.data;
+};
+

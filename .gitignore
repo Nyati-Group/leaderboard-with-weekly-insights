@@ -24,6 +24,7 @@ frontend/.vite/
 
 # Database & OS
 *.sqlite3
+*.db
 *.log
 .DS_Store
 Thumbs.db
