@@ -205,33 +205,35 @@ export function App() {
           {/* Form */}
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">Email Address</label>
+              <label htmlFor="login-email" className="block text-xs font-semibold text-slate-300 mb-1.5">Email Address</label>
               <input
+                id="login-email"
                 type="email"
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
                 required
-                className="w-full bg-slate-950/60 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#039583] transition-all"
+                className="w-full bg-slate-950/60 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#039583] focus:border-transparent transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">Password</label>
+              <label htmlFor="login-password" className="block text-xs font-semibold text-slate-300 mb-1.5">Password</label>
               <input
+                id="login-password"
                 type="password"
                 value={loginPassword}
                 onChange={(e) => setLoginPassword(e.target.value)}
                 required
-                className="w-full bg-slate-950/60 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#039583] transition-all font-mono"
+                className="w-full bg-slate-950/60 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#039583] focus:border-transparent transition-all font-mono"
               />
             </div>
 
             <button
               type="submit"
               disabled={authLoading}
-              className="w-full bg-gradient-to-r from-[#023B77] to-[#039583] hover:from-[#012d5a] hover:to-[#027466] text-white font-semibold py-2.5 rounded-xl text-sm transition-all shadow-md active:scale-[0.99] flex items-center justify-center gap-2"
+              className="w-full bg-gradient-to-r from-[#023B77] to-[#039583] hover:from-[#012d5a] hover:to-[#027466] text-white font-semibold py-3 rounded-xl text-sm transition-all shadow-md active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-[#039583] focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 focus-visible:outline-none flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
             >
-              {authLoading ? 'Verifying Credentials...' : 'Sign In'} <ArrowRight className="w-4 h-4" />
+              {authLoading ? 'Verifying Credentials...' : 'Sign In'} <ArrowRight className="w-4 h-4" aria-hidden="true" />
             </button>
           </form>
 
@@ -422,10 +424,11 @@ export function App() {
             
             <button
               onClick={handleLogout}
-              className="p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all border border-slate-200/80 active:scale-95"
+              className="p-2.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all border border-slate-200/80 active:scale-95 focus-visible:ring-2 focus-visible:ring-[#023B77] focus-visible:outline-none min-h-[40px] min-w-[40px] flex items-center justify-center cursor-pointer"
               title="Sign out of current account"
+              aria-label="Sign out of current account"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
         </header>
@@ -491,12 +494,13 @@ export function App() {
       <div className="fixed bottom-6 right-6 z-50">
         <button
           onClick={() => setIsChatOpen(!isChatOpen)}
-          className="bg-gradient-to-r from-[#023B77] to-[#039583] hover:from-[#012d5a] hover:to-[#027466] text-white px-4 py-3 rounded-full shadow-xl flex items-center gap-2 transition-all hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-teal-300/40 border border-white/20"
+          className="bg-gradient-to-r from-[#023B77] to-[#039583] hover:from-[#012d5a] hover:to-[#027466] text-white px-4 py-3 rounded-full shadow-xl flex items-center gap-2 transition-all hover:scale-105 active:scale-95 focus-visible:ring-4 focus-visible:ring-teal-300/50 focus-visible:outline-none border border-white/20 min-h-[44px] cursor-pointer"
           title="Open Governed AI Assistant"
+          aria-label="Open Governed AI Assistant"
         >
-          <Bot className="w-5 h-5 text-teal-300" />
+          <Bot className="w-5 h-5 text-teal-300" aria-hidden="true" />
           <span className="text-xs font-bold tracking-tight">AI Assistant</span>
-          <Sparkles className="w-3.5 h-3.5 text-teal-200" />
+          <Sparkles className="w-3.5 h-3.5 text-teal-200" aria-hidden="true" />
         </button>
 
         <GovernedChatbotDrawer

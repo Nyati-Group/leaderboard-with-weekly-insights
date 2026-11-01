@@ -541,14 +541,19 @@ export const FieldOperationsView: React.FC<FieldOperationsViewProps> = ({ siteId
 
       {/* Apple-styled Modal: Log New Daily Report */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200/80 max-w-2xl w-full flex flex-col max-h-[90vh] overflow-hidden">
+        <div 
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="dpr-modal-title"
+        >
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200/80 max-w-2xl w-full flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             
             {/* Modal Header */}
             <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
               <div>
-                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                  <Plus className="w-4 h-4 text-[#023B77]" />
+                <h3 id="dpr-modal-title" className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <Plus className="w-4 h-4 text-[#023B77]" aria-hidden="true" />
                   Log Daily Field Report (DPR)
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
@@ -557,9 +562,10 @@ export const FieldOperationsView: React.FC<FieldOperationsViewProps> = ({ siteId
               </div>
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg cursor-pointer min-h-[32px] min-w-[32px] flex items-center justify-center"
+                aria-label="Close DPR dialog"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
 

@@ -207,9 +207,10 @@ export const GovernedChatbotDrawer: React.FC<GovernedChatbotDrawerProps> = ({
                 onClick={handleSyncKnowledge}
                 disabled={isSyncing}
                 title="Reload and synchronize AI knowledge base with latest site updates"
-                className="flex items-center gap-1 text-[11px] font-semibold bg-white/10 hover:bg-white/20 px-2.5 py-1 rounded-lg border border-white/10 text-white transition-all active:scale-95"
+                aria-label="Reload and synchronize AI knowledge base with latest site updates"
+                className="flex items-center gap-1 text-[11px] font-semibold bg-white/10 hover:bg-white/20 px-2.5 py-1.5 rounded-lg border border-white/10 text-white transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-teal-300 focus-visible:outline-none min-h-[36px] cursor-pointer"
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-teal-300' : ''}`} />
+                <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-teal-300' : ''}`} aria-hidden="true" />
                 <span className="hidden sm:inline">{isSyncing ? 'Syncing...' : 'Reload Data'}</span>
               </button>
 
@@ -220,21 +221,24 @@ export const GovernedChatbotDrawer: React.FC<GovernedChatbotDrawerProps> = ({
                   setShowKeyModal(true);
                 }}
                 title="Configure Google Gemini API Key"
-                className={`flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition-all active:scale-95 ${
+                aria-label="Configure Google Gemini API Key"
+                className={`flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg border transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-teal-300 focus-visible:outline-none min-h-[36px] cursor-pointer ${
                   geminiApiKey 
                     ? 'bg-teal-500/20 border-teal-400/40 text-teal-200' 
                     : 'bg-white/10 border-white/10 text-white/80 hover:text-white'
                 }`}
               >
-                <Key className="w-3 h-3" />
+                <Key className="w-3 h-3" aria-hidden="true" />
                 <span className="hidden sm:inline">{geminiApiKey ? 'Gemini 1.5' : 'Set Key'}</span>
               </button>
 
               <button 
                 onClick={onClose} 
-                className="text-white/80 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors ml-1"
+                className="text-white/80 hover:text-white p-2 rounded-lg hover:bg-white/10 transition-colors ml-1 min-h-[36px] min-w-[36px] flex items-center justify-center cursor-pointer"
+                title="Close AI Assistant Drawer"
+                aria-label="Close AI Assistant Drawer"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
           </div>
@@ -301,7 +305,8 @@ export const GovernedChatbotDrawer: React.FC<GovernedChatbotDrawerProps> = ({
                       <div className="mt-3 pt-2.5 border-t border-slate-100">
                         <button
                           onClick={() => toggleCitations(idx)}
-                          className="flex items-center justify-between w-full text-[11px] font-bold text-[#023B77] hover:underline"
+                          aria-expanded={expandedCitations[idx] ? true : false}
+                          className="flex items-center justify-between w-full text-[11px] font-bold text-[#023B77] hover:underline cursor-pointer"
                         >
                           <span className="flex items-center gap-1.5">
                             <LinkIcon className="w-3 h-3 text-[#039583]" />
@@ -357,17 +362,19 @@ export const GovernedChatbotDrawer: React.FC<GovernedChatbotDrawerProps> = ({
               <input
                 type="text"
                 placeholder="Ask about site progress, 8-KRA, manpower, costs, or safety..."
+                aria-label="Type your construction intelligence question"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 disabled={loading}
-                className="flex-1 p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#023B77] transition-all"
+                className="flex-1 p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#023B77] focus:ring-1 focus:ring-[#023B77] transition-all"
               />
               <button
                 type="submit"
                 disabled={!inputValue.trim() || loading}
-                className="p-2.5 bg-[#023B77] hover:bg-[#012d5a] text-white rounded-xl transition-all active:scale-95 disabled:opacity-40 shadow-sm"
+                aria-label="Send message"
+                className="p-2.5 bg-[#023B77] hover:bg-[#012d5a] text-white rounded-xl transition-all active:scale-95 disabled:opacity-40 shadow-sm cursor-pointer min-h-[38px] min-w-[38px] flex items-center justify-center focus-visible:ring-2 focus-visible:ring-[#023B77] focus-visible:outline-none"
               >
-                <Send className="w-4 h-4" />
+                <Send className="w-4 h-4" aria-hidden="true" />
               </button>
             </form>
             <p className="text-[10px] text-slate-400 text-center mt-2">
@@ -379,18 +386,24 @@ export const GovernedChatbotDrawer: React.FC<GovernedChatbotDrawerProps> = ({
 
       {/* Gemini API Key Modal */}
       {showKeyModal && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4 pointer-events-auto">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-md w-full p-6 text-xs">
+        <div 
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4 pointer-events-auto"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="gemini-modal-title"
+        >
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-md w-full p-6 text-xs animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between mb-3">
-              <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                <Key className="w-4 h-4 text-[#023B77]" />
+              <h4 id="gemini-modal-title" className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <Key className="w-4 h-4 text-[#023B77]" aria-hidden="true" />
                 Google Gemini API Key
               </h4>
               <button 
                 onClick={() => setShowKeyModal(false)}
-                className="text-slate-400 hover:text-slate-600"
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer min-h-[32px] min-w-[32px] flex items-center justify-center"
+                aria-label="Close Gemini configuration modal"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4" aria-hidden="true" />
               </button>
             </div>
 
@@ -400,13 +413,14 @@ export const GovernedChatbotDrawer: React.FC<GovernedChatbotDrawerProps> = ({
 
             <form onSubmit={handleSaveApiKey} className="space-y-4">
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Gemini API Key</label>
+                <label htmlFor="gemini-key-input" className="block font-bold text-slate-700 mb-1">Gemini API Key</label>
                 <input
+                  id="gemini-key-input"
                   type="password"
                   placeholder="AIzaSy..."
                   value={tempKey}
                   onChange={(e) => setTempKey(e.target.value)}
-                  className="w-full p-2.5 border border-slate-200 rounded-lg outline-none font-mono text-xs focus:border-[#023B77]"
+                  className="w-full p-2.5 border border-slate-200 rounded-lg outline-none font-mono text-xs focus:border-[#023B77] focus:ring-1 focus:ring-[#023B77]"
                 />
               </div>
 
@@ -421,7 +435,7 @@ export const GovernedChatbotDrawer: React.FC<GovernedChatbotDrawerProps> = ({
                     setSyncFeedback('Gemini API Key cleared.');
                     setTimeout(() => setSyncFeedback(null), 3000);
                   }}
-                  className="text-rose-600 hover:underline font-semibold"
+                  className="text-rose-600 hover:underline font-semibold cursor-pointer py-1.5"
                 >
                   Clear Key
                 </button>
@@ -430,13 +444,13 @@ export const GovernedChatbotDrawer: React.FC<GovernedChatbotDrawerProps> = ({
                   <button
                     type="button"
                     onClick={() => setShowKeyModal(false)}
-                    className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 font-semibold"
+                    className="px-3.5 py-1.5 rounded-lg border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 cursor-pointer min-h-[36px]"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-1.5 rounded-lg bg-[#023B77] hover:bg-[#012d5a] text-white font-bold transition-all"
+                    className="px-4 py-1.5 rounded-lg bg-[#023B77] hover:bg-[#012d5a] text-white font-bold transition-all shadow-sm cursor-pointer min-h-[36px]"
                   >
                     Save Key
                   </button>
