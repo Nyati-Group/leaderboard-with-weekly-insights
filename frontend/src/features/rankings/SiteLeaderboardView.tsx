@@ -105,8 +105,8 @@ export const SiteLeaderboardView: React.FC<SiteLeaderboardViewProps> = ({ curren
                 <Trophy className="w-5 h-5" />
               </span>
               <h2 className="text-xl font-bold text-slate-900">Authoritative 8-KRA Site Leaderboard</h2>
-              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-teal-50 text-[#039583] border border-teal-200">
-                Methodology v1.0
+              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-300">
+                Provisional Weights v1.0
               </span>
             </div>
             <p className="text-sm text-slate-500 mt-1">
@@ -149,6 +149,17 @@ export const SiteLeaderboardView: React.FC<SiteLeaderboardViewProps> = ({ curren
                 {calculating ? 'Calculating...' : 'Recalculate'}
               </button>
             )}
+          </div>
+        </div>
+
+        {/* Provisional Methodology Notice */}
+        <div className="mt-4 p-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-lg text-xs flex items-start gap-2.5">
+          <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+          <div className="space-y-0.5">
+            <span className="font-bold">Governance Notice — Provisional Operational Baseline:</span>
+            <p className="text-amber-800 leading-relaxed">
+              The 8-KRA weights (Progress 20%, Manpower 15%, Cost 20%, Schedule 15%, Quality 10%, Safety 10%, Issue Closure 10%) and the 70% Data Completeness Index (DCI) threshold are provisional operational baselines pending formal organizational policy adoption. An authorized Organization Administrator (<code className="font-mono font-semibold">ORG_ADMIN</code>) can configure and publish updated methodology versions via the governance API (<code className="font-mono font-semibold">POST /api/v1/rankings/methodologies</code>).
+            </p>
           </div>
         </div>
 

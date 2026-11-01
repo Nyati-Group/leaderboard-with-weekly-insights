@@ -64,7 +64,7 @@ export const WeeklyInsightsView: React.FC<WeeklyInsightsViewProps> = ({ siteId, 
   // Role permissions
   const isSiteManager = currentUser?.roles.includes('SITE_MANAGER') || currentUser?.roles.includes('ORG_ADMIN');
   const isController = currentUser?.roles.includes('PROJECT_CONTROLLER') || currentUser?.roles.includes('ORG_ADMIN');
-  const isExecutiveOrAdmin = currentUser?.roles.includes('EXEC_LEADERSHIP') || currentUser?.roles.includes('ORG_ADMIN');
+  const isOrgAdmin = currentUser?.roles.includes('ORG_ADMIN');
   const isSafetyOfficer = currentUser?.roles.includes('SAFETY_OFFICER') || currentUser?.roles.includes('ORG_ADMIN');
   const isQualityOfficer = currentUser?.roles.includes('QUALITY_OFFICER') || currentUser?.roles.includes('ORG_ADMIN');
 
@@ -394,14 +394,14 @@ export const WeeklyInsightsView: React.FC<WeeklyInsightsViewProps> = ({ siteId, 
                       </button>
                     )}
 
-                    {/* Executive / Admin Publication Lock */}
-                    {isExecutiveOrAdmin && reportDetail.status === 'VALIDATED' && (
+                    {/* Organization Admin Publication Lock Authority */}
+                    {isOrgAdmin && reportDetail.status === 'VALIDATED' && (
                       <button
                         onClick={handlePublishReport}
                         disabled={actionLoading}
                         className="flex items-center gap-1 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-sm transition-colors disabled:opacity-50"
                       >
-                        <Lock className="w-3.5 h-3.5" /> Publish & Lock Report
+                        <Lock className="w-3.5 h-3.5" /> Publish & Lock Report (Admin)
                       </button>
                     )}
                   </div>

@@ -292,10 +292,10 @@ class WeeklyReportService:
         current_user: AuthenticatedUserContext
     ) -> WeeklyReport:
         user_roles = set(current_user.roles)
-        if not user_roles.intersection({"ORG_ADMIN", "EXEC_LEADERSHIP"}):
+        if "ORG_ADMIN" not in user_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Only Organization Admins and Executive Leadership can publish and lock weekly reports."
+                detail="Only Organization Admins have executive publication authority to permanently lock weekly reports."
             )
 
         report = db.query(WeeklyReport).filter(WeeklyReport.id == report_id).first()

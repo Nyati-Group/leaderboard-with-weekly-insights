@@ -57,3 +57,14 @@ class RankingSnapshotSchema(BaseModel):
 class CalculateRankingRequest(BaseModel):
     period_id: str = "2026-W44"
     methodology_id: Optional[uuid.UUID] = None
+
+class WeightItemInput(BaseModel):
+    kra_id: int
+    weight_pct: float
+
+class CreateMethodologyRequest(BaseModel):
+    version_code: str
+    name: str
+    rationale: Optional[str] = None
+    weights: List[WeightItemInput]
+

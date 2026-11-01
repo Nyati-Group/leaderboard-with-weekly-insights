@@ -5,10 +5,11 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.api.deps import get_current_user, AuthenticatedUserContext
-from app.models.rankings import RankingSnapshot, RankingMethodology, KRADefinition
+from app.models.rankings import RankingSnapshot, RankingMethodology, RankingWeight, KRADefinition
 from app.schemas.rankings import (
     RankingSnapshotSchema, RankingMethodologySchema,
-    CalculateRankingRequest, KRADefinitionSchema
+    CalculateRankingRequest, KRADefinitionSchema,
+    CreateMethodologyRequest
 )
 from app.services.ranking_service import RankingService
 
@@ -20,12 +21,69 @@ def get_active_methodology(
     current_user: AuthenticatedUserContext = Depends(get_current_user)
 ):
     """
-    Returns the currently active, approved 8-KRA ranking methodology and weights.
+    Returns the currently active 8-KRA ranking methodology and weights.
     """
     try:
         return RankingService.get_active_methodology(db)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+@router.post("/methodologies", response_model=RankingMethodologySchema, status_code=status.HTTP_201_CREATED)
+def create_ranking_methodology(
+    payload: CreateMethodologyRequest,
+    db: Session = Depends(get_db),
+    current_user: AuthenticatedUserContext = Depends(get_current_user)
+):
+    """
+    Configures and approves a new 8-KRA ranking methodology version with custom weights.
+    Restricted to Organization Admins.
+    """
+    user_roles = set(current_user.roles)
+    if "ORG_ADMIN" not in user_roles:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only Organization Admins can configure or revise ranking methodologies and weights."
+        )
+
+    # Validate weights sum to 100.0%
+    total_weight = sum(w.weight_pct for w in payload.weights)
+    if round(total_weight, 2) != 100.00:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Total methodology weights must equal 100.00% (current sum: {total_weight}%)."
+        )
+
+    # Check for unique version_code
+    existing = db.query(RankingMethodology).filter(RankingMethodology.version_code == payload.version_code).first()
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Methodology version code '{payload.version_code}' already exists."
+        )
+
+    # Deactivate existing active methodologies
+    db.query(RankingMethodology).filter(RankingMethodology.is_active == True).update({"is_active": False})
+
+    new_meth = RankingMethodology(
+        version_code=payload.version_code,
+        name=payload.name,
+        is_active=True,
+        approved_by=current_user.id,
+        rationale=payload.rationale
+    )
+    db.add(new_meth)
+    db.flush()
+
+    for w in payload.weights:
+        db.add(RankingWeight(
+            methodology_id=new_meth.id,
+            kra_id=w.kra_id,
+            weight_pct=w.weight_pct
+        ))
+
+    db.commit()
+    db.refresh(new_meth)
+    return new_meth
 
 @router.get("/definitions", response_model=List[KRADefinitionSchema])
 def get_kra_definitions(
