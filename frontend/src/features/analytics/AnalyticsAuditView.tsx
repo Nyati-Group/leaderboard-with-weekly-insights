@@ -8,7 +8,9 @@ import {
   AlertTriangle, 
   RefreshCw, 
   X,
-  Activity
+  Activity,
+  ShieldCheck,
+  History
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -24,8 +26,10 @@ import {
   fetchPortfolioEvm, 
   fetchSiteEvm, 
   importExcelApi, 
+  fetchAuditLogs,
   type PortfolioEVMResponse, 
   type SiteEVMRecord, 
+  type AuditLogRecord,
   type UserProfile 
 } from '../../services/api';
 
@@ -41,8 +45,10 @@ const formatCr = (num: number | null | undefined): string => {
 };
 
 export const AnalyticsAuditView: React.FC<AnalyticsAuditViewProps> = ({ siteId, currentUser }) => {
+  const [activeTab, setActiveTab] = useState<'evm' | 'audit'>('evm');
   const [portfolioData, setPortfolioData] = useState<PortfolioEVMResponse | null>(null);
   const [selectedSiteEvm, setSelectedSiteEvm] = useState<SiteEVMRecord | null>(null);
+  const [auditLogs, setAuditLogs] = useState<AuditLogRecord[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,13 +60,18 @@ export const AnalyticsAuditView: React.FC<AnalyticsAuditViewProps> = ({ siteId, 
   const [importResult, setImportResult] = useState<any>(null);
 
   const canImport = currentUser?.roles.some(r => ['ORG_ADMIN', 'PROJECT_CONTROLLER', 'SITE_MANAGER'].includes(r));
+  const canViewAudit = currentUser?.roles.some(r => ['ORG_ADMIN', 'EXEC_LEADERSHIP', 'PROJECT_CONTROLLER'].includes(r));
 
   const loadData = async () => {
     try {
       setLoading(true);
       setError(null);
-      const port = await fetchPortfolioEvm();
+      const [port, logs] = await Promise.all([
+        fetchPortfolioEvm(),
+        canViewAudit ? fetchAuditLogs(50, undefined, siteId === 'ALL' ? undefined : siteId).catch(() => []) : Promise.resolve([])
+      ]);
       setPortfolioData(port);
+      setAuditLogs(logs);
 
       if (siteId !== 'ALL') {
         const siteData = await fetchSiteEvm(siteId);
@@ -69,7 +80,7 @@ export const AnalyticsAuditView: React.FC<AnalyticsAuditViewProps> = ({ siteId, 
         setSelectedSiteEvm(port.site_breakdown[0]);
       }
     } catch (err: any) {
-      console.error('Error fetching EVM data:', err);
+      console.error('Error fetching analytics data:', err);
       setError(err?.response?.data?.detail || err.message || 'Failed to load EVM analytics.');
     } finally {
       setLoading(false);
@@ -168,14 +179,42 @@ export const AnalyticsAuditView: React.FC<AnalyticsAuditViewProps> = ({ siteId, 
         )}
       </div>
 
-      {/* EVM Key Performance Cards */}
-      {loading ? (
-        <div className="p-12 text-center text-slate-400 text-sm bg-white rounded-xl border border-slate-200">
-          <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-[#023B77]" />
-          Computing Earned Value Management metrics...
-        </div>
-      ) : (
+      {/* Sub-workspace Navigation Tabs */}
+      <div className="flex border-b border-slate-200 gap-4 text-xs font-bold">
+        <button
+          onClick={() => setActiveTab('evm')}
+          className={`pb-2.5 px-2 border-b-2 transition-colors flex items-center gap-1.5 ${
+            activeTab === 'evm'
+              ? 'border-[#023B77] text-[#023B77]'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <Activity className="w-4 h-4" /> Earned Value & S-Curves
+        </button>
+        {canViewAudit && (
+          <button
+            onClick={() => setActiveTab('audit')}
+            className={`pb-2.5 px-2 border-b-2 transition-colors flex items-center gap-1.5 ${
+              activeTab === 'audit'
+                ? 'border-[#023B77] text-[#023B77]'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <ShieldCheck className="w-4 h-4" /> System Audit Ledger ({auditLogs.length})
+          </button>
+        )}
+      </div>
+
+      {activeTab === 'evm' ? (
         <>
+          {/* EVM Key Performance Cards */}
+          {loading ? (
+            <div className="p-12 text-center text-slate-400 text-sm bg-white rounded-xl border border-slate-200">
+              <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-[#023B77]" />
+              Computing Earned Value Management metrics...
+            </div>
+          ) : (
+            <>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* BAC Card */}
             <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
@@ -380,6 +419,73 @@ export const AnalyticsAuditView: React.FC<AnalyticsAuditViewProps> = ({ siteId, 
             </div>
           )}
         </>
+      )}
+    </>
+  ) : (
+    /* Audit Ledger Table */
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+            <div>
+              <h3 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                <History className="w-4 h-4 text-[#023B77]" />
+                Immutable System Audit Ledger
+              </h3>
+              <p className="text-xs text-slate-500">
+                Tamper-evident trail of security, field operational updates, and executive governance events.
+              </p>
+            </div>
+            <span className="text-xs font-mono font-bold px-2.5 py-1 bg-slate-100 rounded text-slate-700">
+              {auditLogs.length} Events Recorded
+            </span>
+          </div>
+
+          {auditLogs.length === 0 ? (
+            <div className="p-12 text-center text-slate-400 text-xs">
+              No audit events logged yet.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+                  <tr>
+                    <th className="py-3 px-4">Timestamp</th>
+                    <th className="py-3 px-4">Event Type</th>
+                    <th className="py-3 px-4">Actor</th>
+                    <th className="py-3 px-4">Site</th>
+                    <th className="py-3 px-4">Resource</th>
+                    <th className="py-3 px-4">Audit Details</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                  {auditLogs.map((log) => (
+                    <tr key={log.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="py-3 px-4 text-slate-400 font-mono text-[11px] whitespace-nowrap">
+                        {new Date(log.timestamp).toLocaleString()}
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className="font-mono font-bold text-[10px] px-2 py-0.5 rounded bg-blue-50 text-[#023B77] border border-blue-200">
+                          {log.event_type}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 font-bold text-slate-800">
+                        {log.actor_name || 'System Actor'}
+                      </td>
+                      <td className="py-3 px-4 font-mono text-[11px]">
+                        {log.site_id || 'Portfolio / Global'}
+                      </td>
+                      <td className="py-3 px-4 font-mono text-slate-500 text-[11px]">
+                        {log.resource_type} {log.resource_id ? `(${log.resource_id.slice(0, 8)}...)` : ''}
+                      </td>
+                      <td className="py-3 px-4 font-mono text-[10px] text-slate-600 max-w-xs truncate">
+                        {log.details_json ? JSON.stringify(log.details_json) : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       )}
 
       {/* Excel Spreadsheet Import Modal */}

@@ -39,6 +39,7 @@ import { QualitySafetyActionsView } from './features/quality-safety/QualitySafet
 import { SiteLeaderboardView } from './features/rankings/SiteLeaderboardView';
 import { WeeklyInsightsView } from './features/weekly-insights/WeeklyInsightsView';
 import { AnalyticsAuditView } from './features/analytics/AnalyticsAuditView';
+import { GovernedChatbotDrawer } from './features/chatbot/GovernedChatbotDrawer';
 
 const WORKSPACES = [
   { id: 'executive', name: 'Executive Overview', icon: LayoutDashboard, requiredRoles: ['ORG_ADMIN', 'EXEC_LEADERSHIP', 'PROJECT_CONTROLLER', 'SITE_MANAGER'] },
@@ -597,52 +598,12 @@ export function App() {
           <Bot className="w-6 h-6" />
         </button>
 
-        {/* Chatbot Window Flyout */}
-        {isChatOpen && (
-          <div className="absolute bottom-16 right-0 w-96 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col h-[480px]">
-            <div className="bg-[#023B77] text-white p-4 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Bot className="w-5 h-5 text-[#039583]" />
-                <div>
-                  <h4 className="text-sm font-bold">Construction AI Assistant</h4>
-                  <p className="text-[10px] text-blue-200">Grounded in approved site data & drawings</p>
-                </div>
-              </div>
-              <button 
-                onClick={() => setIsChatOpen(false)}
-                className="text-white/70 hover:text-white text-xs px-2 py-1 rounded"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50 text-xs">
-              <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm text-slate-700">
-                <p className="font-semibold text-[#023B77] mb-1">AI Assistant Initialized</p>
-                <p>
-                  Authenticated as <span className="font-semibold">{currentUser.full_name}</span> ({currentUser.roles.join(', ')}).
-                  Queries are permission-filtered to your authorized sites.
-                </p>
-                <div className="mt-2 pt-2 border-t border-slate-100 text-[10px] text-slate-400">
-                  Strictly governed: No unrestricted SQL or speculative responses.
-                </div>
-              </div>
-            </div>
-
-            <div className="p-3 bg-white border-t border-slate-200">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Ask a question about current sites..."
-                  className="flex-1 border border-slate-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#039583]"
-                />
-                <button className="bg-[#039583] text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-[#027466]">
-                  Send
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        <GovernedChatbotDrawer
+          isOpen={isChatOpen}
+          onClose={() => setIsChatOpen(false)}
+          siteId={selectedSiteId}
+          currentUser={currentUser}
+        />
       </div>
     </div>
   );

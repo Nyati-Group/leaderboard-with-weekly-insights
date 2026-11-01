@@ -39,6 +39,7 @@ from app.models.weekly_insights import (
     WeeklyReportReview,
     WeeklyInsightItem
 )
+from app.models.chatbot import DocumentUpload, DocumentChunk
 from app.core.logging import logger
 
 ROLES_SEED = [
@@ -602,6 +603,62 @@ def seed_database():
                     narrative="All 16 structural pour checklists verified compliant. Rebar cover blocks 100% certified.",
                     metrics_json={"checklists_passed": 16, "defects_rectified": 2, "open_ncrs": 0}
                 ))
+
+        # 8. Seed Approved Construction Documents & Document Chunks for RAG Chatbot
+        if admin_user:
+            existing_doc = db.query(DocumentUpload).filter(DocumentUpload.site_id == "CS-PUN-01").first()
+            if not existing_doc:
+                doc1 = DocumentUpload(
+                    site_id="CS-PUN-01",
+                    filename="Structural_Specification_IS456_Concrete.pdf",
+                    file_path="/storage/documents/CS-PUN-01/Structural_Specification_IS456_Concrete.pdf",
+                    file_type="PDF",
+                    file_size_bytes=1048576,
+                    status="PROCESSED",
+                    uploaded_by=admin_user.id
+                )
+                db.add(doc1)
+                db.flush()
+
+                db.add(DocumentChunk(
+                    document_id=doc1.id,
+                    site_id="CS-PUN-01",
+                    chunk_index=1,
+                    section_title="M35 Mix Design and Curing Protocol",
+                    content_text="All structural columns and transfer slabs for Pune Commercial Tower shall utilize M35 grade ready-mix concrete with maximum aggregate size 20mm. Moist curing must continue uninterrupted for a minimum of 14 days under geotextile hessian covers.",
+                    token_count=45
+                ))
+                db.add(DocumentChunk(
+                    document_id=doc1.id,
+                    site_id="CS-PUN-01",
+                    chunk_index=2,
+                    section_title="Permissible Construction Tolerances",
+                    content_text="Plumbness tolerance for columns up to 30 meters height shall not exceed 10mm. Surface unevenness for unplastered concrete shall not exceed 3mm under a 3m straight edge.",
+                    token_count=38
+                ))
+
+                doc2 = DocumentUpload(
+                    site_id="CS-PUN-01",
+                    filename="Safety_Management_Manual_Standard_Procedures.pdf",
+                    file_path="/storage/documents/CS-PUN-01/Safety_Management_Manual_Standard_Procedures.pdf",
+                    file_type="PDF",
+                    file_size_bytes=819200,
+                    status="PROCESSED",
+                    uploaded_by=admin_user.id
+                )
+                db.add(doc2)
+                db.flush()
+
+                db.add(DocumentChunk(
+                    document_id=doc2.id,
+                    site_id="CS-PUN-01",
+                    chunk_index=1,
+                    section_title="Human-Audited Scaffold Tagging Protocol",
+                    content_text="Every working scaffold above 2 meters must be physically inspected daily by the certified site safety officer before shift start. Green tags denote safe for use; red tags indicate lockout condition. Strict human observation with zero automated camera reliance.",
+                    token_count=48
+                ))
+
+                logger.info("Seeded approved construction documents and chunks for RAG.")
 
         db.commit()
         logger.info("Database seeding completed successfully.")

@@ -623,5 +623,96 @@ export const importExcelApi = async (file: File, siteId: string, dryRun: boolean
   return response.data;
 };
 
+// ==========================================
+// Governed Chatbot & Audit Ledger Interfaces
+// ==========================================
+
+export interface CitationItem {
+  type: string;
+  reference: string;
+  label: string;
+  details: string;
+}
+
+export interface ChatQueryResponse {
+  conversation_id: string;
+  message: string;
+  citations: CitationItem[];
+  created_at: string;
+}
+
+export interface ChatConversationItem {
+  id: string;
+  title: string;
+  site_id?: string;
+  created_at: string;
+}
+
+export interface ChatMessageItem {
+  id: string;
+  sender: 'USER' | 'ASSISTANT';
+  message_text: string;
+  citations_json?: CitationItem[];
+  created_at: string;
+}
+
+export interface DocumentUploadItem {
+  id: string;
+  site_id: string;
+  filename: string;
+  file_type: string;
+  file_size_bytes: number;
+  status: string;
+  created_at: string;
+}
+
+export interface AuditLogRecord {
+  id: string;
+  event_type: string;
+  actor_id?: string;
+  actor_name?: string;
+  site_id?: string;
+  resource_type: string;
+  resource_id?: string;
+  details_json?: Record<string, any>;
+  timestamp: string;
+}
+
+export const sendChatMessage = async (
+  message: string, 
+  siteId?: string, 
+  conversationId?: string
+): Promise<ChatQueryResponse> => {
+  const response = await apiClient.post<ChatQueryResponse>('/chatbot/query', {
+    message,
+    site_id: siteId && siteId !== 'ALL' ? siteId : undefined,
+    conversation_id: conversationId || undefined
+  });
+  return response.data;
+};
+
+export const fetchConversations = async (): Promise<ChatConversationItem[]> => {
+  const response = await apiClient.get<ChatConversationItem[]>('/chatbot/conversations');
+  return response.data;
+};
+
+export const fetchConversationMessages = async (conversationId: string): Promise<ChatMessageItem[]> => {
+  const response = await apiClient.get<ChatMessageItem[]>(`/chatbot/conversations/${conversationId}/messages`);
+  return response.data;
+};
+
+export const fetchAuditLogs = async (
+  limit: number = 50,
+  eventType?: string,
+  siteId?: string
+): Promise<AuditLogRecord[]> => {
+  const params: Record<string, any> = { limit };
+  if (eventType) params.event_type = eventType;
+  if (siteId && siteId !== 'ALL') params.site_id = siteId;
+  const response = await apiClient.get<AuditLogRecord[]>('/audit/logs', { params });
+  return response.data;
+};
+
+
 
 

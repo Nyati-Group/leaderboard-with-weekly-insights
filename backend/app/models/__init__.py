@@ -40,6 +40,13 @@ from app.models.weekly_insights import (
     WeeklyReportReview,
     WeeklyInsightItem
 )
+from app.models.chatbot import (
+    DocumentUpload,
+    DocumentChunk,
+    ChatConversation,
+    ChatMessage
+)
+from app.models.audit import AuditLog
 
 __all__ = [
     "Base",
@@ -86,5 +93,10 @@ __all__ = [
     "WeeklyDepartmentalInput",
     "WeeklyReportVersion",
     "WeeklyReportReview",
-    "WeeklyInsightItem"
+    "WeeklyInsightItem",
+    "DocumentUpload",
+    "DocumentChunk",
+    "ChatConversation",
+    "ChatMessage",
+    "AuditLog"
 ]
