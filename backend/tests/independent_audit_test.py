@@ -52,11 +52,15 @@ def run_audit():
     required_roles = {"ORG_ADMIN", "EXEC_LEADERSHIP", "PROJECT_CONTROLLER", "SITE_MANAGER", "SAFETY_OFFICER", "QUALITY_OFFICER"}
     log_test("6 Role Hierarchy Presence", role_ids == required_roles, f"Found roles: {role_ids}")
 
-    # Tokens for all 7 seed accounts
+    # Tokens for all 18 seed accounts
     tokens = {}
     seed_accounts = [
         "admin@cld.com", "leadership@cld.com", "controller@cld.com",
-        "pm.pune@cld.com", "safety.pune@cld.com", "quality.pune@cld.com", "pm.mumbai@cld.com"
+        "pm.pune@cld.com", "safety.pune@cld.com", "quality.pune@cld.com",
+        "pm.mumbai@cld.com", "safety.mumbai@cld.com", "quality.mumbai@cld.com",
+        "pm.nashik@cld.com", "safety.nashik@cld.com", "quality.nashik@cld.com",
+        "pm.remote@cld.com", "safety.remote@cld.com", "quality.remote@cld.com",
+        "pm.nagpur@cld.com", "safety.nagpur@cld.com", "quality.nagpur@cld.com"
     ]
     for acc in seed_accounts:
         tok = get_token(acc)
@@ -75,6 +79,14 @@ def run_audit():
     # Pune PM cannot access Mumbai Quality Inspections
     res = client.get("/api/v1/quality/inspections?site_id=CS-MUM-02", headers={"Authorization": f"Bearer {tokens['pm.pune@cld.com']}"})
     log_test("Horizontal Isolation: PM Pune cannot access Mumbai Quality Inspections", res.status_code == 403, f"HTTP {res.status_code}")
+
+    # Nashik PM cannot access Remote daily reports
+    res = client.get("/api/v1/daily-reports?site_id=CS-REM-04", headers={"Authorization": f"Bearer {tokens['pm.nashik@cld.com']}"})
+    log_test("Horizontal Isolation: PM Nashik cannot access Remote Daily Reports", res.status_code == 403, f"HTTP {res.status_code}")
+
+    # Nagpur Safety Officer cannot access Pune safety observations
+    res = client.get("/api/v1/safety/observations?site_id=CS-PUN-01", headers={"Authorization": f"Bearer {tokens['safety.nagpur@cld.com']}"})
+    log_test("Horizontal Isolation: SO Nagpur cannot access Pune Safety Observations", res.status_code == 403, f"HTTP {res.status_code}")
 
     # Safety Officer cannot trigger 8-KRA recalculation
     res = client.post("/api/v1/rankings/calculate", headers={"Authorization": f"Bearer {tokens['safety.pune@cld.com']}"}, json={"period_id": "2026-W44"})

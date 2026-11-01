@@ -139,47 +139,119 @@ SITES_SEED = [
 ]
 
 USERS_SEED = [
+    # Corporate Leadership & Governance
     {
         "email": "admin@cld.com",
-        "full_name": "Global Organization Administrator",
+        "full_name": "Rajesh Sharma",
         "roles": ["ORG_ADMIN"],
-        "assigned_sites": []  # Global access
+        "assigned_sites": []  # Global corporate authority
     },
     {
         "email": "leadership@cld.com",
-        "full_name": "Director of Operations (Executive)",
+        "full_name": "Vikramaditya Roy",
         "roles": ["EXEC_LEADERSHIP"],
-        "assigned_sites": []  # Global read-only
+        "assigned_sites": []  # Global read-only intelligence
     },
     {
         "email": "controller@cld.com",
-        "full_name": "Senior Project Controller",
+        "full_name": "Meera Nambiar",
         "roles": ["PROJECT_CONTROLLER"],
-        "assigned_sites": []  # Multi-site validation
+        "assigned_sites": []  # Multi-site governance & discrepancy control
     },
+    # Pune Commercial Tower (CS-PUN-01)
     {
         "email": "pm.pune@cld.com",
-        "full_name": "Rajesh Sharma (Site Manager Pune)",
+        "full_name": "Amitabh Joshi",
         "roles": ["SITE_MANAGER"],
         "assigned_sites": [("CS-PUN-01", "SITE_MANAGER")]
     },
     {
         "email": "safety.pune@cld.com",
-        "full_name": "Vikas Patil (Safety Officer Pune)",
+        "full_name": "Nikhil Kadam",
         "roles": ["SAFETY_OFFICER"],
         "assigned_sites": [("CS-PUN-01", "SAFETY_OFFICER")]
     },
     {
         "email": "quality.pune@cld.com",
-        "full_name": "Ananya Deshmukh (Quality Officer Pune)",
+        "full_name": "Sneha Sawant",
         "roles": ["QUALITY_OFFICER"],
         "assigned_sites": [("CS-PUN-01", "QUALITY_OFFICER")]
     },
+    # Mumbai Residential Complex (CS-MUM-02)
     {
         "email": "pm.mumbai@cld.com",
-        "full_name": "Amit Kulkarni (Site Manager Mumbai)",
+        "full_name": "Anil Deshmukh",
         "roles": ["SITE_MANAGER"],
         "assigned_sites": [("CS-MUM-02", "SITE_MANAGER")]
+    },
+    {
+        "email": "safety.mumbai@cld.com",
+        "full_name": "Karan Verma",
+        "roles": ["SAFETY_OFFICER"],
+        "assigned_sites": [("CS-MUM-02", "SAFETY_OFFICER")]
+    },
+    {
+        "email": "quality.mumbai@cld.com",
+        "full_name": "Pooja Kulkarni",
+        "roles": ["QUALITY_OFFICER"],
+        "assigned_sites": [("CS-MUM-02", "QUALITY_OFFICER")]
+    },
+    # Nashik Industrial Facility (CS-NAS-03)
+    {
+        "email": "pm.nashik@cld.com",
+        "full_name": "Pravin Patil",
+        "roles": ["SITE_MANAGER"],
+        "assigned_sites": [("CS-NAS-03", "SITE_MANAGER")]
+    },
+    {
+        "email": "safety.nashik@cld.com",
+        "full_name": "Rohan Gaikwad",
+        "roles": ["SAFETY_OFFICER"],
+        "assigned_sites": [("CS-NAS-03", "SAFETY_OFFICER")]
+    },
+    {
+        "email": "quality.nashik@cld.com",
+        "full_name": "Ganesh Shinde",
+        "roles": ["QUALITY_OFFICER"],
+        "assigned_sites": [("CS-NAS-03", "QUALITY_OFFICER")]
+    },
+    # Remote Infrastructure Project (CS-REM-04)
+    {
+        "email": "pm.remote@cld.com",
+        "full_name": "Sunil Rana",
+        "roles": ["SITE_MANAGER"],
+        "assigned_sites": [("CS-REM-04", "SITE_MANAGER")]
+    },
+    {
+        "email": "safety.remote@cld.com",
+        "full_name": "Major R. K. Thapa",
+        "roles": ["SAFETY_OFFICER"],
+        "assigned_sites": [("CS-REM-04", "SAFETY_OFFICER")]
+    },
+    {
+        "email": "quality.remote@cld.com",
+        "full_name": "Deepak Bhandari",
+        "roles": ["QUALITY_OFFICER"],
+        "assigned_sites": [("CS-REM-04", "QUALITY_OFFICER")]
+    },
+    # Nagpur Mixed-Use (CS-NAG-05)
+    {
+        "email": "pm.nagpur@cld.com",
+        "full_name": "Sanjay Meshram",
+        "roles": ["SITE_MANAGER"],
+        "assigned_sites": [("CS-NAG-05", "SITE_MANAGER")]
+    },
+    {
+        "email": "safety.nagpur@cld.com",
+        "full_name": "Ashish Wankhede",
+        "roles": ["SAFETY_OFFICER"],
+        "assigned_sites": [("CS-NAG-05", "SAFETY_OFFICER")]
+    },
+    {
+        "email": "quality.nagpur@cld.com",
+        "full_name": "Madhuri Tijare",
+        "roles": ["QUALITY_OFFICER"],
+        "assigned_sites": [("CS-NAG-05", "QUALITY_OFFICER")]
     }
 ]
 
@@ -229,6 +301,15 @@ def seed_database():
                 )
                 db.add(baseline)
                 logger.info(f"Seeded site: {site.id} - {site.name}")
+            else:
+                site.name = s["name"]
+                site.location = s["location"]
+                site.project_type = s["project_type"]
+                meta = db.query(SiteMetadata).filter(SiteMetadata.site_id == site.id).first()
+                if meta:
+                    meta.client_name = s["client_name"]
+                    meta.contract_value = s["contract_value"]
+                    meta.budgeted_cost = s["budgeted_cost"]
 
         # 3. Seed Users & Site Assignments
         hashed_pwd = get_password_hash(DEFAULT_PASSWORD)
@@ -244,23 +325,30 @@ def seed_database():
                 )
                 db.add(user)
                 db.flush()
+            else:
+                user.full_name = u_data["full_name"]
+                user.hashed_password = hashed_pwd
+                user.is_active = True
 
-                # Assign roles
-                for r_id in u_data["roles"]:
-                    role = db.query(Role).filter(Role.id == r_id).first()
-                    if role:
-                        user.roles.append(role)
+            # Assign roles
+            user.roles = []
+            for r_id in u_data["roles"]:
+                role = db.query(Role).filter(Role.id == r_id).first()
+                if role and role not in user.roles:
+                    user.roles.append(role)
 
-                # Assign sites
-                for s_id, role_name in u_data["assigned_sites"]:
-                    assignment = SiteAssignment(
-                        user_id=user.id,
-                        site_id=s_id,
-                        assigned_role=role_name,
-                        is_active=True
-                    )
-                    db.add(assignment)
-                logger.info(f"Seeded user: {user.email}")
+            # Assign sites
+            db.query(SiteAssignment).filter(SiteAssignment.user_id == user.id).delete()
+            for s_id, role_name in u_data["assigned_sites"]:
+                assignment = SiteAssignment(
+                    user_id=user.id,
+                    site_id=s_id,
+                    assigned_role=role_name,
+                    is_active=True
+                )
+                db.add(assignment)
+            db.flush()
+            logger.info(f"Seeded user: {user.email} ({user.full_name})")
             user_map[user.email] = user
 
         # 4. Seed Historical Daily Reports for Pune (CS-PUN-01) for past 5 days
@@ -409,13 +497,26 @@ def seed_database():
                         status="COMPLETED" if s_id in ["CS-PUN-01", "CS-NAG-05"] else "PENDING"
                     ))
 
+            # Site-specific staff lookup
+            staff = {
+                "CS-PUN-01": {"pm": "pm.pune@cld.com", "safety": "safety.pune@cld.com", "quality": "quality.pune@cld.com"},
+                "CS-MUM-02": {"pm": "pm.mumbai@cld.com", "safety": "safety.mumbai@cld.com", "quality": "quality.mumbai@cld.com"},
+                "CS-NAS-03": {"pm": "pm.nashik@cld.com", "safety": "safety.nashik@cld.com", "quality": "quality.nashik@cld.com"},
+                "CS-REM-04": {"pm": "pm.remote@cld.com", "safety": "safety.remote@cld.com", "quality": "quality.remote@cld.com"},
+                "CS-NAG-05": {"pm": "pm.nagpur@cld.com", "safety": "safety.nagpur@cld.com", "quality": "quality.nagpur@cld.com"},
+            }.get(s_id, {})
+
+            site_pm = user_map.get(staff.get("pm", "")) or admin_user
+            site_safety = user_map.get(staff.get("safety", "")) or admin_user
+            site_quality = user_map.get(staff.get("quality", "")) or admin_user
+
             # Seed quality inspections & checklists
             existing_qi = db.query(QualityInspection).filter(QualityInspection.site_id == s_id).first()
-            if not existing_qi and admin_user:
+            if not existing_qi and site_quality:
                 qi = QualityInspection(
                     site_id=s_id,
                     inspection_date=date.today() - timedelta(days=2),
-                    inspector_id=admin_user.id,
+                    inspector_id=site_quality.id,
                     inspection_type="Pre-pour Concrete Inspection",
                     wbs_location="Tower 1 - Floor 3 - Grid B4-C8",
                     outcome="PASS" if s_id != "CS-MUM-02" else "FAIL",
@@ -439,11 +540,11 @@ def seed_database():
 
             # Seed safety inspection & observations
             existing_si = db.query(SafetyInspection).filter(SafetyInspection.site_id == s_id).first()
-            if not existing_si and admin_user:
+            if not existing_si and site_safety:
                 si = SafetyInspection(
                     site_id=s_id,
                     inspection_date=date.today() - timedelta(days=1),
-                    inspector_id=admin_user.id,
+                    inspector_id=site_safety.id,
                     inspection_type="WEEKLY_AUDIT",
                     compliance_score_pct=100.0 if s_id != "CS-NAS-03" else 90.0,
                     remarks="Human-audited site safety inspection walkthrough."
@@ -472,7 +573,7 @@ def seed_database():
 
                 db.add(SafetyObservation(
                     site_id=s_id,
-                    observer_id=admin_user.id,
+                    observer_id=site_safety.id,
                     observation_date=date.today() - timedelta(days=1),
                     category="Working at Height",
                     severity="LOW",
@@ -482,7 +583,7 @@ def seed_database():
 
             # Seed corrective action
             existing_ca = db.query(CorrectiveAction).filter(CorrectiveAction.site_id == s_id).first()
-            if not existing_ca and admin_user:
+            if not existing_ca and site_safety:
                 ca = CorrectiveAction(
                     site_id=s_id,
                     source_type="SAFETY_OBSERVATION",
@@ -491,7 +592,7 @@ def seed_database():
                     priority="HIGH" if s_id == "CS-NAS-03" else "MEDIUM",
                     due_date=date.today() + timedelta(days=3),
                     status="CLOSED" if s_id in ["CS-PUN-01", "CS-NAG-05"] else "IN_PROGRESS",
-                    created_by=admin_user.id
+                    created_by=site_safety.id
                 )
                 db.add(ca)
 
@@ -503,13 +604,13 @@ def seed_database():
                         DailyReport.site_id == s_id,
                         DailyReport.reporting_date == rep_date
                     ).first()
-                    if not existing_rep and admin_user:
+                    if not existing_rep and site_pm:
                         rep = DailyReport(
                             site_id=s_id,
                             reporting_date=rep_date,
                             status="VALIDATED",
                             current_version=1,
-                            submitted_by=admin_user.id,
+                            submitted_by=site_pm.id,
                             site_manager_remarks=f"Daily operations log for {s_id}."
                         )
                         db.add(rep)

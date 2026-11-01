@@ -12,15 +12,11 @@ import {
   AlertCircle, 
   Database, 
   Server, 
-  MapPin,
-  Briefcase,
-  IndianRupee,
-  Calendar,
-  Lock,
-  LogOut,
+  Lock, 
+  LogOut, 
   UserCheck,
-  ShieldCheck,
-  ArrowRight
+  ShieldCheck, 
+  ArrowRight 
 } from 'lucide-react';
 import { 
   fetchHealth, 
@@ -39,6 +35,7 @@ import { QualitySafetyActionsView } from './features/quality-safety/QualitySafet
 import { SiteLeaderboardView } from './features/rankings/SiteLeaderboardView';
 import { WeeklyInsightsView } from './features/weekly-insights/WeeklyInsightsView';
 import { AnalyticsAuditView } from './features/analytics/AnalyticsAuditView';
+import { ExecutiveOverviewView } from './features/executive/ExecutiveOverviewView';
 import { GovernedChatbotDrawer } from './features/chatbot/GovernedChatbotDrawer';
 
 const WORKSPACES = [
@@ -51,13 +48,30 @@ const WORKSPACES = [
 ];
 
 const DEV_ACCOUNTS = [
-  { email: 'admin@cld.com', role: 'Organization Admin', scope: 'Global / All Sites' },
-  { email: 'leadership@cld.com', role: 'Executive Leadership', scope: 'Global Read-Only' },
-  { email: 'controller@cld.com', role: 'Project Controller', scope: 'Multi-Site Governance' },
-  { email: 'pm.pune@cld.com', role: 'Site Manager (Pune)', scope: 'Restricted: CS-PUN-01' },
-  { email: 'safety.pune@cld.com', role: 'Safety Officer (Pune)', scope: 'Restricted: CS-PUN-01' },
-  { email: 'quality.pune@cld.com', role: 'Quality Officer (Pune)', scope: 'Restricted: CS-PUN-01' },
-  { email: 'pm.mumbai@cld.com', role: 'Site Manager (Mumbai)', scope: 'Restricted: CS-MUM-02' },
+  // Corporate Leadership & Governance
+  { email: 'admin@cld.com', role: 'Organization Admin (Rajesh Sharma)', scope: 'Global / All Sites' },
+  { email: 'leadership@cld.com', role: 'Executive Leadership (Vikramaditya Roy)', scope: 'Global Read-Only' },
+  { email: 'controller@cld.com', role: 'Project Controller (Meera Nambiar)', scope: 'Multi-Site Governance' },
+  // Pune Commercial Tower (CS-PUN-01)
+  { email: 'pm.pune@cld.com', role: 'Site Manager (Amitabh Joshi)', scope: 'Restricted: CS-PUN-01' },
+  { email: 'safety.pune@cld.com', role: 'Safety Officer (Nikhil Kadam)', scope: 'Restricted: CS-PUN-01' },
+  { email: 'quality.pune@cld.com', role: 'Quality Officer (Sneha Sawant)', scope: 'Restricted: CS-PUN-01' },
+  // Mumbai Residential Complex (CS-MUM-02)
+  { email: 'pm.mumbai@cld.com', role: 'Site Manager (Anil Deshmukh)', scope: 'Restricted: CS-MUM-02' },
+  { email: 'safety.mumbai@cld.com', role: 'Safety Officer (Karan Verma)', scope: 'Restricted: CS-MUM-02' },
+  { email: 'quality.mumbai@cld.com', role: 'Quality Officer (Pooja Kulkarni)', scope: 'Restricted: CS-MUM-02' },
+  // Nashik Industrial Facility (CS-NAS-03)
+  { email: 'pm.nashik@cld.com', role: 'Site Manager (Pravin Patil)', scope: 'Restricted: CS-NAS-03' },
+  { email: 'safety.nashik@cld.com', role: 'Safety Officer (Rohan Gaikwad)', scope: 'Restricted: CS-NAS-03' },
+  { email: 'quality.nashik@cld.com', role: 'Quality Officer (Ganesh Shinde)', scope: 'Restricted: CS-NAS-03' },
+  // Remote Infrastructure Project (CS-REM-04)
+  { email: 'pm.remote@cld.com', role: 'Site Manager (Sunil Rana)', scope: 'Restricted: CS-REM-04' },
+  { email: 'safety.remote@cld.com', role: 'Safety Officer (Major R. K. Thapa)', scope: 'Restricted: CS-REM-04' },
+  { email: 'quality.remote@cld.com', role: 'Quality Officer (Deepak Bhandari)', scope: 'Restricted: CS-REM-04' },
+  // Nagpur Mixed-Use (CS-NAG-05)
+  { email: 'pm.nagpur@cld.com', role: 'Site Manager (Sanjay Meshram)', scope: 'Restricted: CS-NAG-05' },
+  { email: 'safety.nagpur@cld.com', role: 'Safety Officer (Ashish Wankhede)', scope: 'Restricted: CS-NAG-05' },
+  { email: 'quality.nagpur@cld.com', role: 'Quality Officer (Madhuri Tijare)', scope: 'Restricted: CS-NAG-05' },
 ];
 
 export function App() {
@@ -148,12 +162,6 @@ export function App() {
   };
 
   const activeSite = sites.find(s => s.id === selectedSiteId);
-
-  const formatCurrency = (val?: number) => {
-    if (val === undefined || val === null) return 'N/A';
-    const cr = val / 10000000;
-    return `₹${cr.toFixed(2)} Cr`;
-  };
 
   // If not authenticated, render Login Modal / Screen
   if (!currentUser) {
@@ -414,7 +422,13 @@ export function App() {
             </div>
           </div>
 
-          {activeWorkspace === 'portfolio' ? (
+          {activeWorkspace === 'executive' ? (
+            <ExecutiveOverviewView
+              currentUser={currentUser}
+              onNavigateWorkspace={(ws) => setActiveWorkspace(ws)}
+              onSelectSite={(sId) => setSelectedSiteId(sId)}
+            />
+          ) : activeWorkspace === 'portfolio' ? (
             <SiteLeaderboardView
               currentUser={currentUser}
               onSelectSite={(sId) => setSelectedSiteId(sId)}
@@ -440,150 +454,11 @@ export function App() {
               currentUser={currentUser}
             />
           ) : (
-            <>
-              {/* User Session Diagnostics Card */}
-              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-6 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="bg-blue-50 text-[#023B77] p-2.5 rounded-lg border border-blue-100">
-                    <UserCheck className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-400 uppercase font-semibold">Active Authentication Context</p>
-                    <p className="text-sm font-bold text-slate-900">{currentUser.email} ({currentUser.full_name})</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4 text-xs">
-                  <div>
-                    <span className="text-slate-400">Assigned Roles: </span>
-                    <span className="font-semibold text-[#023B77]">{currentUser.roles.join(', ')}</span>
-                  </div>
-                  <div className="h-4 w-[1px] bg-slate-200"></div>
-                  <div>
-                    <span className="text-slate-400">Authorized Sites: </span>
-                    <span className="font-semibold text-emerald-700">
-                      {currentUser.has_global_scope ? 'All 5 Sites (Global)' : currentUser.assigned_site_ids.join(', ')}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Metrics & System Diagnostics Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                  <p className="text-xs font-semibold uppercase text-slate-400">Accessible Sites</p>
-                  <p className="text-2xl font-bold text-[#023B77] mt-1">{sites.length} Sites</p>
-                  <p className="text-xs text-slate-500 mt-1">
-                    {currentUser.has_global_scope ? 'Full portfolio authority' : 'Locked to assigned site'}
-                  </p>
-                </div>
-
-                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                  <p className="text-xs font-semibold uppercase text-slate-400">Ranking Engine</p>
-                  <p className="text-2xl font-bold text-[#039583] mt-1">8-KRA v1.0</p>
-                  <p className="text-xs text-slate-500 mt-1">Deterministic composite methodology</p>
-                </div>
-
-                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                  <p className="text-xs font-semibold uppercase text-slate-400">Security & RBAC</p>
-                  <p className="text-2xl font-bold text-slate-800 mt-1">6 Active Roles</p>
-                  <p className="text-xs text-slate-500 mt-1">Admin, Exec, Controller, SM, SO, QO</p>
-                </div>
-
-                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                  <p className="text-xs font-semibold uppercase text-slate-400">AI Assistant</p>
-                  <p className="text-2xl font-bold text-blue-600 mt-1">Governed</p>
-                  <p className="text-xs text-slate-500 mt-1">Grounded in DB & approved documents</p>
-                </div>
-              </div>
-
-              {/* Active Site Spotlight or Portfolio Grid */}
-              {selectedSiteId !== 'ALL' && activeSite ? (
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-6">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
-                    <div>
-                      <span className="text-xs font-mono font-bold text-[#039583] bg-teal-50 px-2.5 py-1 rounded border border-teal-200">
-                        {activeSite.id}
-                      </span>
-                      <h3 className="text-xl font-bold text-slate-900 mt-2">{activeSite.name}</h3>
-                      <p className="text-xs text-slate-500 flex items-center gap-1.5 mt-1">
-                        <MapPin className="w-3.5 h-3.5 text-slate-400" /> {activeSite.location}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <span className="inline-block bg-emerald-100 text-emerald-800 text-xs px-2.5 py-1 rounded-full font-bold">
-                        {activeSite.status}
-                      </span>
-                      <p className="text-xs text-slate-400 mt-1">{activeSite.project_type}</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
-                    <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                      <p className="text-slate-400 font-semibold uppercase flex items-center gap-1">
-                        <Briefcase className="w-3.5 h-3.5 text-[#023B77]" /> Client
-                      </p>
-                      <p className="font-bold text-slate-800 mt-1 text-sm">{activeSite.metadata?.client_name || 'N/A'}</p>
-                    </div>
-
-                    <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                      <p className="text-slate-400 font-semibold uppercase flex items-center gap-1">
-                        <IndianRupee className="w-3.5 h-3.5 text-emerald-600" /> Contract Value
-                      </p>
-                      <p className="font-bold text-emerald-700 mt-1 text-sm">{formatCurrency(activeSite.metadata?.contract_value)}</p>
-                    </div>
-
-                    <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                      <p className="text-slate-400 font-semibold uppercase flex items-center gap-1">
-                        <IndianRupee className="w-3.5 h-3.5 text-blue-600" /> Budgeted Cost
-                      </p>
-                      <p className="font-bold text-blue-800 mt-1 text-sm">{formatCurrency(activeSite.metadata?.budgeted_cost)}</p>
-                    </div>
-
-                    <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                      <p className="text-slate-400 font-semibold uppercase flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5 text-amber-600" /> Timeline
-                      </p>
-                      <p className="font-bold text-slate-800 mt-1">{activeSite.start_date} to {activeSite.target_completion_date}</p>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-6">
-                  <h3 className="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <Building2 className="w-5 h-5 text-[#023B77]" />
-                    Accessible Sites Roster ({sites.length} Authorized)
-                  </h3>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {sites.map((site) => (
-                      <div 
-                        key={site.id}
-                        onClick={() => setSelectedSiteId(site.id)}
-                        className="p-4 bg-slate-50 hover:bg-white rounded-lg border border-slate-200 hover:border-[#039583] hover:shadow-md transition-all cursor-pointer"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-mono font-bold text-[#023B77] bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                            {site.id}
-                          </span>
-                          <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">
-                            {site.status}
-                          </span>
-                        </div>
-                        <h4 className="font-bold text-slate-900 text-sm mt-2">{site.name}</h4>
-                        <p className="text-xs text-slate-500 flex items-center gap-1 mt-1">
-                          <MapPin className="w-3 h-3 text-slate-400" /> {site.location}
-                        </p>
-                        <div className="mt-3 pt-2 border-t border-slate-200/80 flex items-center justify-between text-xs">
-                          <span className="text-slate-400">{site.project_type}</span>
-                          <span className="font-semibold text-slate-700">{formatCurrency(site.metadata?.contract_value)}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </>
+            <ExecutiveOverviewView
+              currentUser={currentUser}
+              onNavigateWorkspace={(ws) => setActiveWorkspace(ws)}
+              onSelectSite={(sId) => setSelectedSiteId(sId)}
+            />
           )}
         </main>
       </div>
