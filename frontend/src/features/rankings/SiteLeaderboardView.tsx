@@ -178,46 +178,46 @@ export const SiteLeaderboardView: React.FC<SiteLeaderboardViewProps> = ({ curren
       </div>
 
       {/* Top Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Spotlight Card */}
-        <div className="bg-gradient-to-br from-[#023B77] to-[#01254d] text-white p-5 rounded-xl shadow-sm relative overflow-hidden">
+        <div className="bg-gradient-to-br from-[#023B77] to-[#01254d] text-white p-5 rounded-2xl shadow-sm relative overflow-hidden border border-blue-900/40">
           <div className="flex items-center justify-between">
-            <span className="text-xs uppercase tracking-wider font-semibold text-blue-200">Current Leader (#1)</span>
-            <span className="p-1.5 bg-amber-400 text-amber-950 rounded-full">
+            <span className="text-xs font-semibold text-blue-200">Current Leader (#1)</span>
+            <span className="p-1.5 bg-amber-400 text-amber-950 rounded-full shadow-sm">
               <Trophy className="w-4 h-4" />
             </span>
           </div>
-          <p className="text-xl font-black mt-2">{topSite?.site_name || 'Calculating...'}</p>
+          <p className="text-lg font-bold mt-2 tracking-tight">{topSite?.site_name || 'Calculating...'}</p>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-black text-amber-300">
+            <span className="text-3xl font-extrabold text-amber-300 font-mono">
               {topSite?.composite_score !== null && topSite?.composite_score !== undefined ? topSite.composite_score : 'N/A'}
             </span>
             <span className="text-xs text-blue-200">/ 100 Index</span>
           </div>
-          <p className="text-[11px] text-blue-200 mt-1">
-            Data Completeness: {topSite?.data_completeness_pct || 0}% • Status: {topSite?.status}
+          <p className="text-[11px] text-blue-200 mt-1 font-mono">
+            Completeness: {topSite?.data_completeness_pct || 0}% • Status: {topSite?.status}
           </p>
         </div>
 
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-          <p className="text-xs font-semibold uppercase text-slate-400">Portfolio Monitored</p>
-          <p className="text-3xl font-bold text-slate-900 mt-2">{snapshots.length} Sites</p>
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+          <p className="text-xs font-semibold text-slate-500">Portfolio Monitored</p>
+          <p className="text-2xl font-bold text-slate-900 mt-2 tracking-tight">{snapshots.length} Sites</p>
           <p className="text-xs text-slate-500 mt-1">
             {snapshots.filter(s => s.status === 'OFFICIAL').length} Official • {snapshots.filter(s => s.status === 'PROVISIONAL').length} Provisional
           </p>
         </div>
 
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-          <p className="text-xs font-semibold uppercase text-slate-400">Methodology Framework</p>
-          <p className="text-3xl font-bold text-[#039583] mt-2">8 KRAs</p>
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+          <p className="text-xs font-semibold text-slate-500">Methodology Framework</p>
+          <p className="text-2xl font-bold text-[#039583] mt-2 tracking-tight">8 KRAs</p>
           <p className="text-xs text-slate-500 mt-1">
             Progress 20%, Cost 20%, Manpower 15%, Sched 15%
           </p>
         </div>
 
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-          <p className="text-xs font-semibold uppercase text-slate-400">Safety Compliance Model</p>
-          <p className="text-3xl font-bold text-blue-700 mt-2">100% Verified</p>
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+          <p className="text-xs font-semibold text-slate-500">Safety Compliance Model</p>
+          <p className="text-2xl font-bold text-blue-700 mt-2 tracking-tight">100% Verified</p>
           <p className="text-xs text-slate-500 mt-1">
             Audited field inspections & lost-time tracking
           </p>
@@ -225,7 +225,7 @@ export const SiteLeaderboardView: React.FC<SiteLeaderboardViewProps> = ({ curren
       </div>
 
       {/* Main Leaderboard Table */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
         <div className="p-4 border-b border-slate-100 flex items-center justify-between">
           <div>
             <h3 className="font-bold text-slate-900 text-sm">Site Performance Ranking Table</h3>
@@ -393,9 +393,9 @@ export const SiteLeaderboardView: React.FC<SiteLeaderboardViewProps> = ({ curren
 
       {/* Audit Breakdown Modal */}
       {selectedSnapshot && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl border border-slate-200 max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden">
-            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200/80 max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
               <div>
                 <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-blue-100 text-[#023B77]">
                   {selectedSnapshot.site_id}
@@ -494,9 +494,9 @@ export const SiteLeaderboardView: React.FC<SiteLeaderboardViewProps> = ({ curren
 
       {/* Methodology Inspector Modal */}
       {showMethodologyModal && methodology && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl border border-slate-200 max-w-xl w-full max-h-[85vh] flex flex-col overflow-hidden">
-            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200/80 max-w-xl w-full max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
               <div>
                 <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
                   {methodology.version_code} Active

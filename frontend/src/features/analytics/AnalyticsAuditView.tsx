@@ -179,14 +179,14 @@ export const AnalyticsAuditView: React.FC<AnalyticsAuditViewProps> = ({ siteId, 
         )}
       </div>
 
-      {/* Sub-workspace Navigation Tabs */}
-      <div className="flex border-b border-slate-200 gap-4 text-xs font-bold">
+      {/* Apple Segmented Navigation Switcher */}
+      <div className="flex bg-slate-200/70 backdrop-blur-md rounded-2xl p-1 shadow-sm text-xs font-semibold gap-1 border border-slate-300/40 w-fit">
         <button
           onClick={() => setActiveTab('evm')}
-          className={`pb-2.5 px-2 border-b-2 transition-colors flex items-center gap-1.5 ${
+          className={`py-2 px-4 rounded-xl flex items-center gap-1.5 transition-all active:scale-[0.99] ${
             activeTab === 'evm'
-              ? 'border-[#023B77] text-[#023B77]'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
+              ? 'bg-[#023B77] text-white shadow-sm font-bold'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
           }`}
         >
           <Activity className="w-4 h-4" /> Earned Value & S-Curves
@@ -194,10 +194,10 @@ export const AnalyticsAuditView: React.FC<AnalyticsAuditViewProps> = ({ siteId, 
         {canViewAudit && (
           <button
             onClick={() => setActiveTab('audit')}
-            className={`pb-2.5 px-2 border-b-2 transition-colors flex items-center gap-1.5 ${
+            className={`py-2 px-4 rounded-xl flex items-center gap-1.5 transition-all active:scale-[0.99] ${
               activeTab === 'audit'
-                ? 'border-[#023B77] text-[#023B77]'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
+                ? 'bg-[#023B77] text-white shadow-sm font-bold'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
             }`}
           >
             <ShieldCheck className="w-4 h-4" /> System Audit Ledger ({auditLogs.length})
@@ -490,8 +490,8 @@ export const AnalyticsAuditView: React.FC<AnalyticsAuditViewProps> = ({ siteId, 
 
       {/* Excel Spreadsheet Import Modal */}
       {showImportModal && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl border border-slate-200 max-w-lg w-full p-6 text-xs">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200/80 max-w-lg w-full p-6 text-xs animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
               <div>
                 <h3 className="text-base font-bold text-slate-900 flex items-center gap-1.5">

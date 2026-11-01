@@ -108,42 +108,42 @@ export const QualitySafetyActionsView: React.FC<QualitySafetyActionsViewProps> =
         </span>
       </div>
 
-      {/* Primary Section Switcher */}
-      <div className="flex bg-white rounded-xl border border-slate-200 p-1 shadow-sm text-xs font-bold">
+      {/* Apple-styled Segmented Switcher */}
+      <div className="flex bg-slate-200/70 backdrop-blur-md rounded-2xl p-1 shadow-sm text-xs font-semibold gap-1 border border-slate-300/40">
         <button
           onClick={() => setActiveSection('quality')}
-          className={`flex-1 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-all ${
+          className={`flex-1 py-2 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.99] ${
             activeSection === 'quality' 
-              ? 'bg-[#023B77] text-white shadow-sm' 
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+              ? 'bg-[#023B77] text-white shadow-sm font-bold' 
+              : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
           }`}
         >
           <FileCheck2 className="w-4 h-4" />
-          <span>Quality & NCR Register ({ncrs.length})</span>
+          <span>Quality & NCR ({ncrs.length})</span>
         </button>
 
         <button
           onClick={() => setActiveSection('safety')}
-          className={`flex-1 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-all ${
+          className={`flex-1 py-2 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.99] ${
             activeSection === 'safety' 
-              ? 'bg-[#023B77] text-white shadow-sm' 
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+              ? 'bg-[#023B77] text-white shadow-sm font-bold' 
+              : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
           }`}
         >
           <ShieldCheck className="w-4 h-4" />
-          <span>Safety Management ({safetyObservations.length} Observations, {safetyIncidents.length} Incidents)</span>
+          <span>Safety Audits ({safetyObservations.length} Obs, {safetyIncidents.length} Incidents)</span>
         </button>
 
         <button
           onClick={() => setActiveSection('actions')}
-          className={`flex-1 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-all ${
+          className={`flex-1 py-2 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.99] ${
             activeSection === 'actions' 
-              ? 'bg-[#023B77] text-white shadow-sm' 
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+              ? 'bg-[#023B77] text-white shadow-sm font-bold' 
+              : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
           }`}
         >
           <Activity className="w-4 h-4" />
-          <span>Corrective Actions Center ({actions.length})</span>
+          <span>Corrective Actions ({actions.length})</span>
         </button>
       </div>
 

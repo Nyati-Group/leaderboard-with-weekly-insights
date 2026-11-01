@@ -509,8 +509,8 @@ export const WeeklyInsightsView: React.FC<WeeklyInsightsViewProps> = ({ siteId, 
 
       {/* Modal: Initialize Weekly Report */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl border border-slate-200 max-w-lg w-full p-6 text-xs">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200/80 max-w-lg w-full p-6 text-xs animate-in fade-in zoom-in-95 duration-200">
             <h3 className="text-base font-bold text-slate-900 mb-1">Initialize Weekly Report</h3>
             <p className="text-slate-500 mb-4">Create a new consolidated weekly report draft for {effectiveSiteId}.</p>
 
@@ -593,8 +593,8 @@ export const WeeklyInsightsView: React.FC<WeeklyInsightsViewProps> = ({ siteId, 
 
       {/* Modal: Add Departmental Input */}
       {showDeptModal && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl border border-slate-200 max-w-md w-full p-6 text-xs">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200/80 max-w-md w-full p-6 text-xs animate-in fade-in zoom-in-95 duration-200">
             <h3 className="text-base font-bold text-slate-900 mb-1">
               Submit {deptType === 'SAFETY' ? 'Safety' : 'Quality'} Departmental Input
             </h3>
@@ -640,8 +640,8 @@ export const WeeklyInsightsView: React.FC<WeeklyInsightsViewProps> = ({ siteId, 
 
       {/* Modal: Controller Review */}
       {showReviewModal && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl border border-slate-200 max-w-md w-full p-6 text-xs">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200/80 max-w-md w-full p-6 text-xs animate-in fade-in zoom-in-95 duration-200">
             <h3 className="text-base font-bold text-slate-900 mb-1">Project Controller Review</h3>
             <p className="text-slate-500 mb-4">Validate reported figures against daily report data or flag discrepancies for correction.</p>
 
