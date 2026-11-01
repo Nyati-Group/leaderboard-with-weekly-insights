@@ -96,10 +96,10 @@ export const QualitySafetyActionsView: React.FC<QualitySafetyActionsViewProps> =
           </div>
           <div>
             <h4 className="text-xs font-bold text-[#023B77] uppercase tracking-wider">
-              Human-Audited Quality & Safety Governance
+              Quality Assurance & Field Safety Governance
             </h4>
             <p className="text-xs text-slate-600 mt-0.5">
-              Strictly grounded in field walkthroughs, manual observations, and certified NCRs. CCTV/Vision is managed separately in SiteVision.
+              Verified field walkthroughs, certified quality inspections, and on-site corrective action tracking across active work packages.
             </p>
           </div>
         </div>
@@ -131,7 +131,7 @@ export const QualitySafetyActionsView: React.FC<QualitySafetyActionsViewProps> =
           }`}
         >
           <ShieldCheck className="w-4 h-4" />
-          <span>Manual Safety Management ({safetyObservations.length} Obs, {safetyIncidents.length} Inc)</span>
+          <span>Safety Management ({safetyObservations.length} Observations, {safetyIncidents.length} Incidents)</span>
         </button>
 
         <button

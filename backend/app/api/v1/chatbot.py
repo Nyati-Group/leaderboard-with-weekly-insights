@@ -8,6 +8,7 @@ from app.core.database import get_db
 from app.api.deps import get_current_user, AuthenticatedUserContext
 from app.models.chatbot import ChatConversation, ChatMessage, DocumentUpload
 from app.services.chatbot_service import ChatbotService
+from app.schemas.common import StandardResponse, ResponseMeta
 
 router = APIRouter(prefix="/chatbot", tags=["Governed Construction AI Assistant"])
 
@@ -15,6 +16,7 @@ class ChatQueryRequest(BaseModel):
     message: str
     site_id: Optional[str] = None
     conversation_id: Optional[uuid.UUID] = None
+    gemini_api_key: Optional[str] = None
 
 class CitationSchema(BaseModel):
     type: str
@@ -74,9 +76,21 @@ def query_construction_assistant(
         user_message=payload.message,
         site_id=payload.site_id,
         conversation_id=payload.conversation_id,
-        current_user=current_user
+        current_user=current_user,
+        gemini_api_key=payload.gemini_api_key
     )
     return result
+
+@router.post("/sync", response_model=StandardResponse[Dict[str, Any]])
+def sync_chatbot_knowledge_base(
+    db: Session = Depends(get_db),
+    current_user: AuthenticatedUserContext = Depends(get_current_user)
+):
+    """
+    Reloads and synchronizes the assistant knowledge base with latest live platform data.
+    """
+    stats = ChatbotService.sync_platform_knowledge(db, current_user)
+    return StandardResponse(data=stats, meta=ResponseMeta())
 
 @router.get("/conversations", response_model=List[ChatConversationSchema])
 def list_user_conversations(

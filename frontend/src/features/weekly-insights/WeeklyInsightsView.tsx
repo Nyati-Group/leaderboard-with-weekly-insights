@@ -456,7 +456,7 @@ export const WeeklyInsightsView: React.FC<WeeklyInsightsViewProps> = ({ siteId, 
                           <span className={`px-2 py-0.5 rounded font-mono font-bold text-[10px] ${
                             dep.department === 'SAFETY' ? 'bg-emerald-100 text-emerald-800' : 'bg-teal-100 text-teal-800'
                           }`}>
-                            {dep.department === 'SAFETY' ? '🛡️ Manual Safety Compliance' : '📋 Quality Inspection Review'}
+                            {dep.department === 'SAFETY' ? '🛡️ Safety Compliance' : '📋 Quality Inspection Review'}
                           </span>
                           <span className="text-[10px] text-slate-400">{new Date(dep.submitted_at).toLocaleDateString()}</span>
                         </div>
@@ -600,7 +600,7 @@ export const WeeklyInsightsView: React.FC<WeeklyInsightsViewProps> = ({ siteId, 
             </h3>
             <p className="text-slate-500 mb-4">
               {deptType === 'SAFETY' 
-                ? 'Synthesize human-verified inspections, incidents, and hazard mitigations (zero CCTV).' 
+                ? 'Synthesize verified safety inspections, incident logs, and hazard mitigation reports.' 
                 : 'Synthesize quality checklist results, defects, and NCR status.'}
             </p>
 

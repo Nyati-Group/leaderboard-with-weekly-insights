@@ -303,6 +303,47 @@ export const submitDailyReport = async (reportId: string): Promise<DailyReportDe
   return response.data.data;
 };
 
+export interface CreateDailyReportPayload {
+  site_id: string;
+  reporting_date: string;
+  site_manager_remarks?: string;
+  progress_records?: Array<{
+    work_package: string;
+    activity_name: string;
+    unit_of_measure: string;
+    planned_quantity: number;
+    actual_quantity: number;
+    cumulative_quantity?: number;
+    notes?: string;
+  }>;
+  manpower_records?: Array<{
+    trade_category: string;
+    contractor_name: string;
+    planned_count: number;
+    actual_count: number;
+    overtime_hours?: number;
+  }>;
+  expenditure_records?: Array<{
+    cost_code: string;
+    category: string;
+    planned_amount: number;
+    actual_amount: number;
+    vendor_name?: string;
+    invoice_ref?: string;
+  }>;
+  activity_records?: Array<{
+    name: string;
+    status?: string;
+    blockers?: string;
+    mitigation_steps?: string;
+  }>;
+}
+
+export const createDailyReportApi = async (payload: CreateDailyReportPayload): Promise<DailyReportDetail> => {
+  const response = await apiClient.post<ApiResponse<DailyReportDetail>>('/daily-reports', payload);
+  return response.data.data;
+};
+
 export const fetchReportVersions = async (reportId: string): Promise<VersionSnapshot[]> => {
   const response = await apiClient.get<ApiResponse<VersionSnapshot[]>>(`/daily-reports/${reportId}/versions`);
   return response.data.data;
@@ -681,14 +722,33 @@ export interface AuditLogRecord {
 export const sendChatMessage = async (
   message: string, 
   siteId?: string, 
-  conversationId?: string
+  conversationId?: string,
+  geminiApiKey?: string
 ): Promise<ChatQueryResponse> => {
   const response = await apiClient.post<ChatQueryResponse>('/chatbot/query', {
     message,
     site_id: siteId && siteId !== 'ALL' ? siteId : undefined,
-    conversation_id: conversationId || undefined
+    conversation_id: conversationId || undefined,
+    gemini_api_key: geminiApiKey || undefined
   });
   return response.data;
+};
+
+export interface ChatbotSyncResult {
+  synced_at: string;
+  sites_count: number;
+  daily_reports_count: number;
+  weekly_reports_count: number;
+  quality_inspections_count: number;
+  safety_inspections_count: number;
+  open_actions_count: number;
+  active_rankings_period: string;
+  message: string;
+}
+
+export const syncChatbotContextApi = async (): Promise<ChatbotSyncResult> => {
+  const response = await apiClient.post<ApiResponse<ChatbotSyncResult>>('/chatbot/sync');
+  return response.data.data;
 };
 
 export const fetchConversations = async (): Promise<ChatConversationItem[]> => {

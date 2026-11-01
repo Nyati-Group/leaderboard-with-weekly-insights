@@ -8,10 +8,7 @@ import {
   ShieldAlert, 
   FileSpreadsheet, 
   Bot, 
-  CheckCircle2, 
   AlertCircle, 
-  Database, 
-  Server, 
   Lock, 
   LogOut, 
   UserCheck,
@@ -19,14 +16,10 @@ import {
   ArrowRight 
 } from 'lucide-react';
 import { 
-  fetchHealth, 
-  fetchDbHealth, 
   fetchSites, 
   loginApi,
   fetchMeApi,
   logoutApi,
-  type HealthStatus, 
-  type DbHealthStatus, 
   type SiteRecord,
   type UserProfile
 } from './services/api';
@@ -79,27 +72,16 @@ export function App() {
   const [activeWorkspace, setActiveWorkspace] = useState('executive');
   const [selectedSiteId, setSelectedSiteId] = useState('ALL');
   const [sites, setSites] = useState<SiteRecord[]>([]);
-  const [backendHealth, setBackendHealth] = useState<HealthStatus | null>(null);
-  const [dbHealth, setDbHealth] = useState<DbHealthStatus | null>(null);
-  const [loading, setLoading] = useState(true);
   const [authLoading, setAuthLoading] = useState(false);
   const [loginEmail, setLoginEmail] = useState('admin@cld.com');
   const [loginPassword, setLoginPassword] = useState('Construction@2026');
   const [authError, setAuthError] = useState<string | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
-  // Initialize System and Session
+  // Initialize Session
   useEffect(() => {
     async function init() {
       try {
-        setLoading(true);
-        const [health, db] = await Promise.all([
-          fetchHealth().catch(err => ({ status: 'offline: ' + err.message, environment: 'offline', version: 'unknown', project: 'unavailable' })),
-          fetchDbHealth().catch(err => ({ status: 'offline: ' + err.message, database_url: 'unavailable' })),
-        ]);
-        setBackendHealth(health as HealthStatus);
-        setDbHealth(db as DbHealthStatus);
-
         // Check if existing token in localStorage
         const token = localStorage.getItem('cld_access_token');
         if (token) {
@@ -114,8 +96,6 @@ export function App() {
         }
       } catch (err: any) {
         console.error('Initialization error:', err);
-      } finally {
-        setLoading(false);
       }
     }
 
@@ -305,37 +285,13 @@ export function App() {
           </nav>
         </div>
 
-        {/* System Health Status in Sidebar Footer */}
-        <div className="mt-auto p-4 border-t border-blue-900/40 bg-[#012852]/60 text-xs space-y-2">
+        {/* Organization Badge in Sidebar Footer */}
+        <div className="mt-auto p-4 border-t border-blue-900/30 bg-[#012852]/40 text-xs">
           <div className="flex items-center justify-between text-blue-200">
-            <span className="flex items-center gap-1.5">
-              <Server className="w-3.5 h-3.5 text-blue-300" /> API Gateway
-            </span>
-            {backendHealth?.status === 'healthy' ? (
-              <span className="inline-flex items-center gap-1 text-emerald-400 font-medium">
-                <CheckCircle2 className="w-3.5 h-3.5" /> Online
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 text-amber-400 font-medium">
-                <AlertCircle className="w-3.5 h-3.5" /> {loading ? 'Checking...' : 'Standby'}
-              </span>
-            )}
+            <span className="font-semibold text-white tracking-tight">Construction Intelligence</span>
+            <span className="text-[10px] bg-teal-500/20 text-teal-300 px-2 py-0.5 rounded-full font-mono font-medium">v1.0</span>
           </div>
-
-          <div className="flex items-center justify-between text-blue-200">
-            <span className="flex items-center gap-1.5">
-              <Database className="w-3.5 h-3.5 text-blue-300" /> PostgreSQL
-            </span>
-            {dbHealth?.status === 'connected' ? (
-              <span className="inline-flex items-center gap-1 text-emerald-400 font-medium">
-                <CheckCircle2 className="w-3.5 h-3.5" /> Ready
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 text-amber-400 font-medium">
-                <AlertCircle className="w-3.5 h-3.5" /> {loading ? 'Checking...' : 'Standby'}
-              </span>
-            )}
-          </div>
+          <p className="text-[11px] text-blue-300/70 mt-1">Enterprise Multi-Site Operations</p>
         </div>
       </aside>
 
@@ -413,12 +369,6 @@ export function App() {
                   ? 'Consolidated portfolio view across all construction sites' 
                   : `Site-specific view for ${activeSite?.name} (${activeSite?.id})`}
               </p>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-md text-xs font-semibold">
-                <ShieldCheck className="w-3.5 h-3.5" /> 3-Tier RBAC Active
-              </span>
             </div>
           </div>
 

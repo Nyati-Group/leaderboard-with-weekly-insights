@@ -29,7 +29,7 @@ const KRA_NAMES: Record<number, { code: string; label: string; weight: string }>
   3: { code: 'COST', label: 'Cost Control', weight: '20%' },
   4: { code: 'SCHD', label: 'Schedule', weight: '15%' },
   5: { code: 'QUAL', label: 'Quality', weight: '10%' },
-  6: { code: 'SAFE', label: 'Safety (Manual)', weight: '10%' },
+  6: { code: 'SAFE', label: 'Safety Compliance', weight: '10%' },
   7: { code: 'CLOS', label: 'Issue Closure', weight: '10%' },
 };
 
@@ -152,15 +152,21 @@ export const SiteLeaderboardView: React.FC<SiteLeaderboardViewProps> = ({ curren
           </div>
         </div>
 
-        {/* Provisional Methodology Notice */}
-        <div className="mt-4 p-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-lg text-xs flex items-start gap-2.5">
-          <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-          <div className="space-y-0.5">
-            <span className="font-bold">Governance Notice — Provisional Operational Baseline:</span>
-            <p className="text-amber-800 leading-relaxed">
-              The 8-KRA weights (Progress 20%, Manpower 15%, Cost 20%, Schedule 15%, Quality 10%, Safety 10%, Issue Closure 10%) and the 70% Data Completeness Index (DCI) threshold are provisional operational baselines pending formal organizational policy adoption. An authorized Organization Administrator (<code className="font-mono font-semibold">ORG_ADMIN</code>) can configure and publish updated methodology versions via the governance API (<code className="font-mono font-semibold">POST /api/v1/rankings/methodologies</code>).
-            </p>
+        {/* Executive Methodology Baseline */}
+        <div className="mt-4 p-3 bg-slate-50 border border-slate-200/80 text-slate-700 rounded-xl text-xs flex items-center justify-between shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+          <div className="flex items-center gap-2.5">
+            <span className="w-2 h-2 rounded-full bg-[#039583]" />
+            <span className="font-semibold text-slate-800">8-KRA Operational Baseline:</span>
+            <span className="text-slate-600">
+              Progress 20% • Cost 20% • Manpower 15% • Schedule 15% • Quality 10% • Safety 10% • Closure 10% (70% DCI Minimum Threshold)
+            </span>
           </div>
+          <button
+            onClick={() => setShowMethodologyModal(true)}
+            className="text-[11px] font-semibold text-[#023B77] hover:underline shrink-0 ml-2"
+          >
+            Inspect Weights &rarr;
+          </button>
         </div>
 
         {error && (
@@ -211,9 +217,9 @@ export const SiteLeaderboardView: React.FC<SiteLeaderboardViewProps> = ({ curren
 
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
           <p className="text-xs font-semibold uppercase text-slate-400">Safety Compliance Model</p>
-          <p className="text-3xl font-bold text-blue-700 mt-2">100% Human</p>
+          <p className="text-3xl font-bold text-blue-700 mt-2">100% Verified</p>
           <p className="text-xs text-slate-500 mt-1">
-            Audited inspections & lost-time hours (No CCTV)
+            Audited field inspections & lost-time tracking
           </p>
         </div>
       </div>
@@ -514,7 +520,7 @@ export const SiteLeaderboardView: React.FC<SiteLeaderboardViewProps> = ({ curren
                 <p>{methodology.rationale || 'Official organizational standard for ranking multi-site construction execution.'}</p>
                 <p className="mt-2 text-[11px] text-slate-600 font-semibold">
                   • Missing field data is never treated as zero: sites with &lt;70% completeness remain Unranked.<br />
-                  • Safety compliance (KRA 6) is strictly calculated from human-verified inspections and verified incidents (zero CCTV / computer vision).
+                  • Safety compliance (KRA 6) is strictly calculated from certified site inspections, observation audits, and incident records.
                 </p>
               </div>
 
