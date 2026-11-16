@@ -1,6 +1,5 @@
 import uuid
 import re
-import os
 import httpx
 from datetime import datetime, timezone, date
 from typing import Optional, Dict, Any, List, Tuple
@@ -44,14 +43,13 @@ class ChatbotService:
         user_message: str,
         site_id: Optional[str],
         conversation_id: Optional[uuid.UUID],
-        current_user: AuthenticatedUserContext,
-        gemini_api_key: Optional[str] = None
+        current_user: AuthenticatedUserContext
     ) -> Dict[str, Any]:
         """
         RAG Construction Assistant:
         1. Checks domain guardrails (only answers questions related to this platform).
         2. Gathers complete live context from database (Sites, Operations, Manpower, Costs, Quality, Safety, Rankings, Weekly Reports, Documents).
-        3. Generates grounded answer using Google Gemini API if key is available, or deterministic synthesis engine as fallback.
+        3. Generates grounded answer using Google Gemini API if a server-side key is configured (via GEMINI_API_KEY env var), or deterministic synthesis engine as fallback.
         4. Provides structured authoritative source citations.
         """
         effective_site = site_id
@@ -92,7 +90,7 @@ class ChatbotService:
             cctv_rejection_msg = (
                 "CCTV integration and computer-vision features belong strictly to Project SiteVision, "
                 "which is managed as a completely separate project.\n\n"
-                "This **Construction Site Leadership Dashboard** exclusively utilizes 100% human-verified "
+                "This Construction Site Leadership Dashboard exclusively utilizes 100% human-verified "
                 "and manual safety inspections, incident logs, and certified field audits. "
                 "No live camera feeds or AI-generated computer vision detections are hosted within this application."
             )
@@ -122,12 +120,12 @@ class ChatbotService:
         if not cls.is_query_domain_relevant(user_message):
             off_topic_msg = (
                 "I am the Executive Construction Assistant specialized strictly for the "
-                "**Construction Site Leadership Dashboard**.\n\n"
+                "Construction Site Leadership Dashboard.\n\n"
                 "I can only answer questions directly related to our construction sites, operations, "
                 "daily progress logs, manpower attendance, project finances, quality inspections, field safety, "
                 "corrective actions, 8-KRA rankings, and weekly executive reports.\n\n"
-                "Please ask a question related to our projects (e.g. *'What is the progress of Pune Commercial Tower?'*, "
-                "*'Show current 8-KRA rankings'*, or *'What is our portfolio cost and SPI?'*)."
+                "Please ask a question related to our projects (e.g. 'What is the progress of Pune Commercial Tower?', "
+                "'Show current 8-KRA rankings', or 'What is our portfolio cost and SPI?')."
             )
             assistant_msg = ChatMessage(
                 conversation_id=conv.id,
@@ -147,8 +145,8 @@ class ChatbotService:
         # 3. Gather Comprehensive RAG Context & Citations
         context_lines, citations = cls.build_complete_rag_context(db, effective_site, current_user, user_message)
 
-        # 4. Generate Answer via Gemini API (if key available) or Deterministic RAG fallback
-        active_key = gemini_api_key or settings.GEMINI_API_KEY or os.environ.get("GEMINI_API_KEY")
+        # 4. Generate Answer via Gemini API (if a server-side key is configured) or Deterministic RAG fallback
+        active_key = settings.GEMINI_API_KEY
         response_text = None
 
         if active_key:
@@ -159,9 +157,9 @@ class ChatbotService:
 
         # Append source citations footer if not already present
         if citations and "Authoritative Source Citations:" not in response_text:
-            citations_footer = ["\n\n---\n**Authoritative Source Citations:**"]
+            citations_footer = ["\n\nAuthoritative Source Citations:"]
             for i, cite in enumerate(citations[:4], 1):
-                citations_footer.append(f"{i}. `[{cite['type']}]` **{cite['label']}** — *{cite['details']}*")
+                citations_footer.append(f"{i}. [{cite['type']}] {cite['label']} — {cite['details']}")
             response_text += "\n".join(citations_footer)
 
         # 5. Save Assistant Message
@@ -379,7 +377,7 @@ class ChatbotService:
     @classmethod
     def call_gemini_api(cls, query: str, context_lines: List[str], api_key: str) -> Optional[str]:
         """Calls Google Gemini REST API using httpx."""
-        model = settings.GEMINI_MODEL or "gemini-1.5-flash"
+        model = settings.GEMINI_MODEL or "gemini-3.5-flash"
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
 
         system_instruction = (
@@ -391,7 +389,10 @@ class ChatbotService:
             "1. ONLY answer questions directly related to this construction management platform and its projects.\n"
             "2. Ground every single claim in the provided real-time website context.\n"
             "3. If the user asks anything unrelated to construction or this platform, politely decline.\n"
-            "4. Be concise, highly professional, structured with markdown headings and bullet points.\n"
+            "4. Be concise and highly professional. Output PLAIN TEXT ONLY: never use markdown syntax of any "
+            "kind. Do not use '#' headings, '**' or '*' for bold/italic, backticks, or '---' dividers. "
+            "Write section labels as plain text followed by a colon on their own line, and start list lines "
+            "with a plain hyphen ('-') followed by a space.\n"
             "5. Never invent or speculate on financial numbers, dates, or progress percentages."
         )
 
@@ -403,30 +404,46 @@ class ChatbotService:
         )
 
         payload = {
+            "systemInstruction": {
+                "role": "system",
+                "parts": [{"text": system_instruction}]
+            },
             "contents": [
                 {
                     "role": "user",
-                    "parts": [{"text": f"{system_instruction}\n\n{prompt_body}"}]
+                    "parts": [{"text": prompt_body}]
                 }
             ],
             "generationConfig": {
                 "temperature": 0.2,
-                "maxOutputTokens": 1000
+                "maxOutputTokens": 1500,
+                # Newer Gemini models spend output tokens on internal "thinking" by default,
+                # which can exhaust maxOutputTokens before any visible text is produced
+                # (finishReason MAX_TOKENS with an empty content.parts). This is a fast,
+                # grounded Q&A over supplied context, not a multi-step reasoning task, so
+                # thinking is disabled for deterministic, low-latency, visible output.
+                "thinkingConfig": {"thinkingBudget": 0}
             }
         }
 
         try:
-            with httpx.Client(timeout=15.0) as client:
+            with httpx.Client(timeout=20.0) as client:
                 res = client.post(url, json=payload)
                 if res.status_code == 200:
                     data = res.json()
                     candidates = data.get("candidates", [])
                     if candidates:
                         parts = candidates[0].get("content", {}).get("parts", [])
-                        if parts:
-                            return parts[0].get("text", "").strip()
+                        if parts and parts[0].get("text"):
+                            return parts[0]["text"].strip()
+                        logger.warning(
+                            f"Gemini API returned no usable text (finishReason="
+                            f"{candidates[0].get('finishReason')}): {str(data)[:300]}"
+                        )
+                    else:
+                        logger.warning(f"Gemini API returned no candidates: {str(data)[:300]}")
                 else:
-                    logger.warning(f"Gemini API returned status {res.status_code}: {res.text[:200]}")
+                    logger.warning(f"Gemini API returned status {res.status_code}: {res.text[:300]}")
         except Exception as e:
             logger.error(f"Gemini API invocation failed: {str(e)}")
 
@@ -445,60 +462,60 @@ class ChatbotService:
         answer_parts: List[str] = []
 
         if any(term in q for term in ["rank", "leaderboard", "top site", "winner", "score", "kra"]):
-            answer_parts.append("### 🏆 Authoritative 8-KRA Portfolio Leaderboard (Period 2026-W44)")
+            answer_parts.append("🏆 Authoritative 8-KRA Portfolio Leaderboard (Period 2026-W44)")
             rank_cites = [c for c in citations if c["type"] == "RANKING_ENGINE"]
             if rank_cites:
                 for rc in rank_cites:
-                    answer_parts.append(f"- **{rc['label']}**: {rc['details']}")
+                    answer_parts.append(f"- {rc['label']}: {rc['details']}")
             else:
                 answer_parts.append("Portfolio sites are tracked under Methodology v1.0 with official 8-KRA weighting.")
 
         elif any(term in q for term in ["progress", "delay", "status", "milestone", "activity"]):
-            answer_parts.append(f"### 📊 Operational & Physical Progress {f'for {site_id}' if site_id else 'Overview'}")
+            answer_parts.append(f"📊 Operational & Physical Progress {f'for {site_id}' if site_id else 'Overview'}")
             daily_cites = [c for c in citations if c["type"] in ["DAILY_OPERATIONS", "WEEKLY_REPORT"]]
             if daily_cites:
                 for dc in daily_cites:
-                    answer_parts.append(f"- **{dc['label']}**: {dc['details']}")
+                    answer_parts.append(f"- {dc['label']}: {dc['details']}")
             for cl in context_lines[:3]:
                 if "Daily Progress" in cl or "Weekly Report" in cl or "Project" in cl:
-                    answer_parts.append(f"> {cl}")
+                    answer_parts.append(f"- {cl}")
 
         elif any(term in q for term in ["manpower", "worker", "labor", "census", "contractor", "headcount"]):
-            answer_parts.append("### 👷 Manpower Deployment & Attendance Census")
+            answer_parts.append("👷 Manpower Deployment & Attendance Census")
             for cl in context_lines:
                 if "Manpower" in cl or "Daily Progress Report" in cl:
                     answer_parts.append(f"- {cl}")
-            answer_parts.append("- **Attendance Ratio**: 96.8% of daily contractor plan met across active trade shifts.")
+            answer_parts.append("- Attendance Ratio: 96.8% of daily contractor plan met across active trade shifts.")
 
         elif any(term in q for term in ["cost", "expense", "budget", "financial", "rupee", "inr", "cpi", "spi"]):
-            answer_parts.append("### 💰 Financial Control & Budget Expenditure")
+            answer_parts.append("💰 Financial Control & Budget Expenditure")
             for cl in context_lines:
                 if "Contract:" in cl or "Budget:" in cl:
                     answer_parts.append(f"- {cl}")
-            answer_parts.append("- **Portfolio CPI**: 1.02 (Expenditure strictly controlled within approved baseline).")
+            answer_parts.append("- Portfolio CPI: 1.02 (Expenditure strictly controlled within approved baseline).")
 
         elif any(term in q for term in ["quality", "defect", "ncr", "rework", "inspection"]):
-            answer_parts.append("### 📋 Quality Inspections & Compliance")
+            answer_parts.append("📋 Quality Inspections & Compliance")
             for cl in citations:
                 if cl["type"] == "QUALITY_AUDIT":
-                    answer_parts.append(f"- **{cl['label']}**: {cl['details']}")
-            answer_parts.append("- **Quality Pass Rate**: 96.5% across concrete pouring, rebar spacing, and formwork audits.")
+                    answer_parts.append(f"- {cl['label']}: {cl['details']}")
+            answer_parts.append("- Quality Pass Rate: 96.5% across concrete pouring, rebar spacing, and formwork audits.")
 
         elif any(term in q for term in ["safety", "incident", "hazard", "observation", "audit"]):
-            answer_parts.append("### 🛡️ Safety Inspections & Compliance")
+            answer_parts.append("🛡️ Safety Inspections & Compliance")
             for cl in citations:
                 if cl["type"] == "SAFETY_AUDIT":
-                    answer_parts.append(f"- **{cl['label']}**: {cl['details']}")
-            answer_parts.append("- **Safety Standards**: 100% verified field audits, PPE compliance checks, and scaffold inspections.")
+                    answer_parts.append(f"- {cl['label']}: {cl['details']}")
+            answer_parts.append("- Safety Standards: 100% verified field audits, PPE compliance checks, and scaffold inspections.")
 
         elif any(term in q for term in ["action", "corrective", "due", "priority"]):
-            answer_parts.append("### ⚡ Corrective Actions & Accountability")
+            answer_parts.append("⚡ Corrective Actions & Accountability")
             for cl in citations:
                 if cl["type"] == "ACTION_ITEM":
-                    answer_parts.append(f"- **{cl['label']}**: {cl['details']}")
+                    answer_parts.append(f"- {cl['label']}: {cl['details']}")
 
         else:
-            answer_parts.append("### 📋 Construction Intelligence Synthesis")
+            answer_parts.append("📋 Construction Intelligence Synthesis")
             answer_parts.append("Grounded in live database records and approved engineering documents:")
             for cl in context_lines[:4]:
                 answer_parts.append(f"- {cl}")

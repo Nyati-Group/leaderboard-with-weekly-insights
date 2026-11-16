@@ -16,6 +16,12 @@ from app.schemas.weekly_insights import (
 )
 from app.api.deps import AuthenticatedUserContext
 
+# Reports can only be edited (narrative, insight items, departmental inputs) while still
+# being compiled by the site. Once submitted for controller review, the record must stay
+# frozen so the controller's decision and the immutable version snapshot stay in sync with
+# what was actually reviewed.
+EDITABLE_STATUSES = {"DRAFT", "FLAGGED", "INPUTS_PENDING"}
+
 class WeeklyReportService:
     @staticmethod
     def create_weekly_report(
@@ -28,6 +34,12 @@ class WeeklyReportService:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"You do not have authorization to create reports for site {payload.site_id}."
+            )
+
+        if "SITE_MANAGER" not in current_user.roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only Site Managers can initialize weekly reports."
             )
 
         existing = db.query(WeeklyReport).filter(
@@ -86,10 +98,16 @@ class WeeklyReportService:
         if not current_user.can_access_site(report.site_id):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied for this site.")
 
-        if report.status in ["PUBLISHED", "VALIDATED"]:
+        if "SITE_MANAGER" not in current_user.roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only the Site Manager can edit weekly report content."
+            )
+
+        if report.status not in EDITABLE_STATUSES:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Cannot edit report in {report.status} state. Report is locked."
+                detail=f"Cannot edit report in {report.status} state. Editing is only permitted for draft or flagged reports."
             )
 
         if payload.executive_summary is not None:
@@ -133,18 +151,19 @@ class WeeklyReportService:
         if not current_user.can_access_site(report.site_id):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied for this site.")
 
-        if report.status in ["PUBLISHED", "VALIDATED"]:
+        if report.status not in EDITABLE_STATUSES:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot add departmental inputs to a validated or published report."
+                detail=f"Cannot add departmental inputs while report is in {report.status} state. "
+                       f"Inputs are only accepted before the report is submitted for controller review."
             )
 
-        # Department role verification
+        # Department role verification (Organization Admins are read-only on weekly reports)
         dept = payload.department.upper()
-        if dept == "SAFETY" and not any(r in current_user.roles for r in ["SAFETY_OFFICER", "SITE_MANAGER", "ORG_ADMIN"]):
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only Safety Officers or Managers can submit Safety inputs.")
-        if dept == "QUALITY" and not any(r in current_user.roles for r in ["QUALITY_OFFICER", "SITE_MANAGER", "ORG_ADMIN"]):
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only Quality Officers or Managers can submit Quality inputs.")
+        if dept == "SAFETY" and not any(r in current_user.roles for r in ["SAFETY_OFFICER", "SITE_MANAGER"]):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only Safety Officers or the Site Manager can submit Safety inputs.")
+        if dept == "QUALITY" and not any(r in current_user.roles for r in ["QUALITY_OFFICER", "SITE_MANAGER"]):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only Quality Officers or the Site Manager can submit Quality inputs.")
 
         # Check existing input for department
         existing_input = db.query(WeeklyDepartmentalInput).filter(
@@ -187,7 +206,13 @@ class WeeklyReportService:
         if not current_user.can_access_site(report.site_id):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied for this site.")
 
-        if report.status not in ["DRAFT", "FLAGGED", "INPUTS_PENDING"]:
+        if "SITE_MANAGER" not in current_user.roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only the Site Manager can submit the weekly report for controller review."
+            )
+
+        if report.status not in EDITABLE_STATUSES:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Report cannot be submitted from current status: {report.status}."
@@ -248,10 +273,11 @@ class WeeklyReportService:
         current_user: AuthenticatedUserContext
     ) -> WeeklyReport:
         user_roles = set(current_user.roles)
-        if not user_roles.intersection({"PROJECT_CONTROLLER", "ORG_ADMIN"}):
+        if "PROJECT_CONTROLLER" not in user_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Only Project Controllers and Organization Admins can review weekly reports."
+                detail="Only Project Controllers can review weekly reports. Organization Admins are "
+                       "restricted to final publication authority and do not review or edit content."
             )
 
         report = db.query(WeeklyReport).filter(WeeklyReport.id == report_id).first()

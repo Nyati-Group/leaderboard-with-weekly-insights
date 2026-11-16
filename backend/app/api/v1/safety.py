@@ -140,7 +140,7 @@ def list_safety_inspections(
 def create_safety_inspection(
     payload: SafetyInspectionCreateRequest,
     db: Session = Depends(get_db),
-    current_user: AuthenticatedUserContext = Depends(require_roles("SAFETY_OFFICER", "ORG_ADMIN", "PROJECT_CONTROLLER"))
+    current_user: AuthenticatedUserContext = Depends(require_roles("SAFETY_OFFICER", "PROJECT_CONTROLLER"))
 ):
     if not current_user.can_access_site(payload.site_id):
         raise HTTPException(status_code=403, detail="Cross-site access denied.")

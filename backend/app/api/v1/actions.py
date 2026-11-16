@@ -18,6 +18,26 @@ from app.schemas.common import StandardResponse, ResponseMeta
 
 router = APIRouter(prefix="/actions", tags=["Corrective Actions Center"])
 
+# Whoever owns the underlying finding is responsible for driving a corrective action to
+# closure. The Site Manager (overall site owner) and Project Controller (corporate oversight)
+# can act on any source type; Safety/Quality Officers are scoped to their own domain's findings.
+ACTION_RESPONSIBLE_ROLES = {
+    "SAFETY_INCIDENT": {"SAFETY_OFFICER", "SITE_MANAGER", "PROJECT_CONTROLLER"},
+    "SAFETY_OBSERVATION": {"SAFETY_OFFICER", "SITE_MANAGER", "PROJECT_CONTROLLER"},
+    "QUALITY_NCR": {"QUALITY_OFFICER", "SITE_MANAGER", "PROJECT_CONTROLLER"},
+    "AUDIT_FINDING": {"PROJECT_CONTROLLER", "SITE_MANAGER"},
+    "MANUAL": {"SITE_MANAGER", "SAFETY_OFFICER", "QUALITY_OFFICER", "PROJECT_CONTROLLER"},
+}
+DEFAULT_ACTION_ROLES = {"SITE_MANAGER", "PROJECT_CONTROLLER"}
+
+def _responsible_roles_for(source_type: str) -> set:
+    return ACTION_RESPONSIBLE_ROLES.get(source_type.upper(), DEFAULT_ACTION_ROLES)
+
+def _can_write_action(current_user: AuthenticatedUserContext, action: CorrectiveAction) -> bool:
+    if any(str(a.assigned_user_id) == str(current_user.id) for a in action.assignments):
+        return True
+    return bool(_responsible_roles_for(action.source_type).intersection(current_user.roles))
+
 # Schemas
 class CorrectiveActionCreateRequest(BaseModel):
     site_id: str
@@ -113,6 +133,13 @@ def create_corrective_action(
     if not current_user.can_access_site(payload.site_id):
         raise HTTPException(status_code=403, detail="Cross-site access denied.")
 
+    allowed_roles = _responsible_roles_for(payload.source_type)
+    if not allowed_roles.intersection(current_user.roles):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Raising a {payload.source_type} corrective action requires one of: {', '.join(sorted(allowed_roles))}."
+        )
+
     action = CorrectiveAction(
         site_id=payload.site_id,
         source_type=payload.source_type,
@@ -176,6 +203,14 @@ def update_action_status(
 
     if not current_user.can_access_site(action.site_id):
         raise HTTPException(status_code=403, detail="Cross-site access denied.")
+
+    if not _can_write_action(current_user, action):
+        allowed_roles = _responsible_roles_for(action.source_type)
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Updating this {action.source_type} action requires one of: "
+                   f"{', '.join(sorted(allowed_roles))}, or being assigned to it."
+        )
 
     old_status = action.status
     action.status = payload.new_status

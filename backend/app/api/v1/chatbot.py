@@ -16,7 +16,6 @@ class ChatQueryRequest(BaseModel):
     message: str
     site_id: Optional[str] = None
     conversation_id: Optional[uuid.UUID] = None
-    gemini_api_key: Optional[str] = None
 
 class CitationSchema(BaseModel):
     type: str
@@ -76,8 +75,7 @@ def query_construction_assistant(
         user_message=payload.message,
         site_id=payload.site_id,
         conversation_id=payload.conversation_id,
-        current_user=current_user,
-        gemini_api_key=payload.gemini_api_key
+        current_user=current_user
     )
     return result
 

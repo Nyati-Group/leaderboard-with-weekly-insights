@@ -46,8 +46,10 @@ services:
       ENVIRONMENT: development
       DEBUG: "true"
       SECRET_KEY: ${SECRET_KEY:-023B77_039583_cld_super_secret_jwt_key_change_in_production_min_32_chars}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.5-flash}
     ports:
-      - "8000:8000"
+      - "8001:8000"
 
   frontend:
     build:

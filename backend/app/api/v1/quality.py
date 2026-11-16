@@ -122,7 +122,7 @@ def list_quality_inspections(
 def create_quality_inspection(
     payload: QualityInspectionCreateRequest,
     db: Session = Depends(get_db),
-    current_user: AuthenticatedUserContext = Depends(require_roles("QUALITY_OFFICER", "ORG_ADMIN", "PROJECT_CONTROLLER"))
+    current_user: AuthenticatedUserContext = Depends(require_roles("QUALITY_OFFICER", "PROJECT_CONTROLLER"))
 ):
     if not current_user.can_access_site(payload.site_id):
         raise HTTPException(status_code=403, detail="Cross-site access denied.")
@@ -212,7 +212,7 @@ def list_ncrs(
 def issue_ncr(
     payload: NCRCreateRequest,
     db: Session = Depends(get_db),
-    current_user: AuthenticatedUserContext = Depends(require_roles("QUALITY_OFFICER", "ORG_ADMIN", "PROJECT_CONTROLLER"))
+    current_user: AuthenticatedUserContext = Depends(require_roles("QUALITY_OFFICER", "PROJECT_CONTROLLER"))
 ):
     if not current_user.can_access_site(payload.site_id):
         raise HTTPException(status_code=403, detail="Cross-site access denied.")
@@ -277,7 +277,7 @@ def issue_ncr(
 def close_ncr(
     ncr_id: str,
     db: Session = Depends(get_db),
-    current_user: AuthenticatedUserContext = Depends(require_roles("QUALITY_OFFICER", "ORG_ADMIN", "PROJECT_CONTROLLER"))
+    current_user: AuthenticatedUserContext = Depends(require_roles("QUALITY_OFFICER", "PROJECT_CONTROLLER"))
 ):
     ncr = db.query(NCRRecord).filter(NCRRecord.id == ncr_id).first()
     if not ncr:

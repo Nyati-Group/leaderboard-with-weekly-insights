@@ -235,6 +235,11 @@ export interface CorrectiveActionItem {
   status: string;
   created_by: string;
   created_at: string;
+  assignments: Array<{
+    id: string;
+    assigned_user_id: string;
+    assigned_at: string;
+  }>;
   status_history: Array<{
     id: string;
     old_status: string;
@@ -362,10 +367,67 @@ export const fetchNCRs = async (siteId?: string): Promise<NCRRecord[]> => {
   return response.data.data;
 };
 
+export interface CreateQualityInspectionPayload {
+  site_id: string;
+  inspection_date: string;
+  inspection_type: string;
+  wbs_location: string;
+  outcome: string;
+  remarks?: string;
+  checklist_items: { parameter: string; is_compliant: boolean; comments?: string }[];
+}
+
+export const createQualityInspectionApi = async (payload: CreateQualityInspectionPayload): Promise<QualityInspection> => {
+  const response = await apiClient.post<ApiResponse<QualityInspection>>('/quality/inspections', payload);
+  return response.data.data;
+};
+
+export interface IssueNcrPayload {
+  site_id: string;
+  ncr_number: string;
+  issued_to: string;
+  root_cause: string;
+  corrective_action_required: string;
+  defect_description?: string;
+  defect_severity?: string;
+  estimated_rework_cost?: number;
+  estimated_delay_days?: number;
+}
+
+export const issueNcrApi = async (payload: IssueNcrPayload): Promise<NCRRecord> => {
+  const response = await apiClient.post<ApiResponse<NCRRecord>>('/quality/ncrs', payload);
+  return response.data.data;
+};
+
+export const closeNcrApi = async (ncrId: string): Promise<NCRRecord> => {
+  const response = await apiClient.put<ApiResponse<NCRRecord>>(`/quality/ncrs/${ncrId}/close`);
+  return response.data.data;
+};
+
 // Safety APIs
 export const fetchSafetyInspections = async (siteId?: string): Promise<SafetyInspection[]> => {
   const params = siteId && siteId !== 'ALL' ? { site_id: siteId } : {};
   const response = await apiClient.get<ApiResponse<SafetyInspection[]>>('/safety/inspections', { params });
+  return response.data.data;
+};
+
+export interface CreateSafetyInspectionPayload {
+  site_id: string;
+  inspection_date: string;
+  inspection_type: string;
+  remarks?: string;
+  checklist_items: {
+    category: string;
+    item_description: string;
+    is_compliant: boolean;
+    severity: string;
+    corrective_action_required: boolean;
+    comments?: string;
+  }[];
+}
+
+export const createSafetyInspectionApi = async (payload: CreateSafetyInspectionPayload): Promise<SafetyInspection> => {
+  const response = await apiClient.post<ApiResponse<SafetyInspection>>('/safety/inspections', payload);
   return response.data.data;
 };
 
@@ -393,6 +455,22 @@ export const updateActionStatusApi = async (actionId: string, newStatus: string,
     new_status: newStatus,
     notes,
   });
+  return response.data.data;
+};
+
+export interface CreateCorrectiveActionPayload {
+  site_id: string;
+  source_type: string;
+  source_id?: string;
+  title: string;
+  description: string;
+  priority: string;
+  due_date: string;
+  assigned_user_ids?: string[];
+}
+
+export const createCorrectiveActionApi = async (payload: CreateCorrectiveActionPayload): Promise<CorrectiveActionItem> => {
+  const response = await apiClient.post<ApiResponse<CorrectiveActionItem>>('/actions', payload);
   return response.data.data;
 };
 
@@ -463,6 +541,18 @@ export const calculateLeaderboard = async (periodId: string = '2026-W44', method
 
 export const fetchActiveMethodology = async (): Promise<RankingMethodology> => {
   const response = await apiClient.get<RankingMethodology>('/rankings/methodologies/active');
+  return response.data;
+};
+
+export interface CreateMethodologyPayload {
+  version_code: string;
+  name: string;
+  rationale?: string;
+  weights: { kra_id: number; weight_pct: number }[];
+}
+
+export const createRankingMethodology = async (payload: CreateMethodologyPayload): Promise<RankingMethodology> => {
+  const response = await apiClient.post<RankingMethodology>('/rankings/methodologies', payload);
   return response.data;
 };
 
@@ -720,16 +810,14 @@ export interface AuditLogRecord {
 }
 
 export const sendChatMessage = async (
-  message: string, 
-  siteId?: string, 
-  conversationId?: string,
-  geminiApiKey?: string
+  message: string,
+  siteId?: string,
+  conversationId?: string
 ): Promise<ChatQueryResponse> => {
   const response = await apiClient.post<ChatQueryResponse>('/chatbot/query', {
     message,
     site_id: siteId && siteId !== 'ALL' ? siteId : undefined,
-    conversation_id: conversationId || undefined,
-    gemini_api_key: geminiApiKey || undefined
+    conversation_id: conversationId || undefined
   });
   return response.data;
 };

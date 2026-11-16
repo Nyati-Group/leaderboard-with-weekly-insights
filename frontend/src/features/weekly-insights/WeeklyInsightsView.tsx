@@ -61,12 +61,13 @@ export const WeeklyInsightsView: React.FC<WeeklyInsightsViewProps> = ({ siteId, 
 
   const effectiveSiteId = siteId === 'ALL' ? 'CS-PUN-01' : siteId;
 
-  // Role permissions
-  const isSiteManager = currentUser?.roles.includes('SITE_MANAGER') || currentUser?.roles.includes('ORG_ADMIN');
-  const isController = currentUser?.roles.includes('PROJECT_CONTROLLER') || currentUser?.roles.includes('ORG_ADMIN');
-  const isOrgAdmin = currentUser?.roles.includes('ORG_ADMIN');
-  const isSafetyOfficer = currentUser?.roles.includes('SAFETY_OFFICER') || currentUser?.roles.includes('ORG_ADMIN');
-  const isQualityOfficer = currentUser?.roles.includes('QUALITY_OFFICER') || currentUser?.roles.includes('ORG_ADMIN');
+  // Role permissions. Organization Admins are strictly read-only on weekly reports aside from
+  // the final publication lock: they do not draft, submit, review, or add departmental input.
+  const isSiteManager = currentUser?.roles.includes('SITE_MANAGER') ?? false;
+  const isController = currentUser?.roles.includes('PROJECT_CONTROLLER') ?? false;
+  const isOrgAdmin = currentUser?.roles.includes('ORG_ADMIN') ?? false;
+  const isSafetyOfficer = currentUser?.roles.includes('SAFETY_OFFICER') ?? false;
+  const isQualityOfficer = currentUser?.roles.includes('QUALITY_OFFICER') ?? false;
 
   const loadReports = async () => {
     try {
@@ -354,7 +355,7 @@ export const WeeklyInsightsView: React.FC<WeeklyInsightsViewProps> = ({ siteId, 
                   {/* Multi-Stage Action Buttons */}
                   <div className="flex flex-wrap items-center gap-2">
                     {/* Safety Officer Input */}
-                    {(isSafetyOfficer || isSiteManager) && reportDetail.status !== 'PUBLISHED' && reportDetail.status !== 'VALIDATED' && (
+                    {(isSafetyOfficer || isSiteManager) && ['DRAFT', 'FLAGGED', 'INPUTS_PENDING'].includes(reportDetail.status) && (
                       <button
                         onClick={() => { setDeptType('SAFETY'); setShowDeptModal(true); }}
                         className="flex items-center gap-1 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg text-xs font-bold transition-colors"
@@ -364,7 +365,7 @@ export const WeeklyInsightsView: React.FC<WeeklyInsightsViewProps> = ({ siteId, 
                     )}
 
                     {/* Quality Officer Input */}
-                    {(isQualityOfficer || isSiteManager) && reportDetail.status !== 'PUBLISHED' && reportDetail.status !== 'VALIDATED' && (
+                    {(isQualityOfficer || isSiteManager) && ['DRAFT', 'FLAGGED', 'INPUTS_PENDING'].includes(reportDetail.status) && (
                       <button
                         onClick={() => { setDeptType('QUALITY'); setShowDeptModal(true); }}
                         className="flex items-center gap-1 px-3 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-300 rounded-lg text-xs font-bold transition-colors"

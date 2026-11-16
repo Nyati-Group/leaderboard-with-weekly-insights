@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Bot, 
-  X, 
-  Send, 
-  Sparkles, 
-  Link as LinkIcon, 
-  ChevronDown, 
+import {
+  Bot,
+  X,
+  Send,
+  Sparkles,
+  Link as LinkIcon,
+  ChevronDown,
   ChevronUp,
   RefreshCw,
-  Key,
   CheckCircle2,
   ShieldCheck
 } from 'lucide-react';
@@ -46,13 +45,6 @@ export const GovernedChatbotDrawer: React.FC<GovernedChatbotDrawerProps> = ({
   const [loading, setLoading] = useState<boolean>(false);
   const [conversationId, setConversationId] = useState<string | undefined>(undefined);
   const [expandedCitations, setExpandedCitations] = useState<Record<number, boolean>>({});
-  
-  // Gemini API Key State
-  const [geminiApiKey, setGeminiApiKey] = useState<string>(() => {
-    return localStorage.getItem('gemini_api_key') || '';
-  });
-  const [showKeyModal, setShowKeyModal] = useState<boolean>(false);
-  const [tempKey, setTempKey] = useState<string>('');
 
   // Knowledge Sync State
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
@@ -105,10 +97,9 @@ export const GovernedChatbotDrawer: React.FC<GovernedChatbotDrawerProps> = ({
 
     try {
       const response = await sendChatMessage(
-        text, 
-        siteId, 
-        conversationId,
-        geminiApiKey.trim() || undefined
+        text,
+        siteId,
+        conversationId
       );
       
       setConversationId(response.conversation_id);
@@ -149,20 +140,6 @@ export const GovernedChatbotDrawer: React.FC<GovernedChatbotDrawerProps> = ({
     } finally {
       setIsSyncing(false);
     }
-  };
-
-  const handleSaveApiKey = (e: React.FormEvent) => {
-    e.preventDefault();
-    const clean = tempKey.trim();
-    setGeminiApiKey(clean);
-    if (clean) {
-      localStorage.setItem('gemini_api_key', clean);
-    } else {
-      localStorage.removeItem('gemini_api_key');
-    }
-    setShowKeyModal(false);
-    setSyncFeedback(clean ? 'Gemini API Key saved and active!' : 'Reset to platform synthesis engine.');
-    setTimeout(() => setSyncFeedback(null), 4000);
   };
 
   const toggleCitations = (index: number) => {
@@ -214,25 +191,7 @@ export const GovernedChatbotDrawer: React.FC<GovernedChatbotDrawerProps> = ({
                 <span className="hidden sm:inline">{isSyncing ? 'Syncing...' : 'Reload Data'}</span>
               </button>
 
-              {/* Gemini Key Config Pill */}
               <button
-                onClick={() => {
-                  setTempKey(geminiApiKey);
-                  setShowKeyModal(true);
-                }}
-                title="Configure Google Gemini API Key"
-                aria-label="Configure Google Gemini API Key"
-                className={`flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg border transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-teal-300 focus-visible:outline-none min-h-[36px] cursor-pointer ${
-                  geminiApiKey 
-                    ? 'bg-teal-500/20 border-teal-400/40 text-teal-200' 
-                    : 'bg-white/10 border-white/10 text-white/80 hover:text-white'
-                }`}
-              >
-                <Key className="w-3 h-3" aria-hidden="true" />
-                <span className="hidden sm:inline">{geminiApiKey ? 'Gemini 1.5' : 'Set Key'}</span>
-              </button>
-
-              <button 
                 onClick={onClose} 
                 className="text-white/80 hover:text-white p-2 rounded-lg hover:bg-white/10 transition-colors ml-1 min-h-[36px] min-w-[36px] flex items-center justify-center cursor-pointer"
                 title="Close AI Assistant Drawer"
@@ -260,10 +219,8 @@ export const GovernedChatbotDrawer: React.FC<GovernedChatbotDrawerProps> = ({
               </span>
             </div>
             <div className="flex items-center gap-1 text-slate-500">
-              <span className={`w-1.5 h-1.5 rounded-full ${geminiApiKey ? 'bg-teal-500' : 'bg-blue-500'}`} />
-              <span className="font-medium">
-                {geminiApiKey ? 'Gemini 1.5 Flash' : 'Deterministic RAG'}
-              </span>
+              <span className="w-1.5 h-1.5 rounded-full bg-teal-500" />
+              <span className="font-medium">Governed RAG Assistant</span>
             </div>
           </div>
 
@@ -383,83 +340,6 @@ export const GovernedChatbotDrawer: React.FC<GovernedChatbotDrawerProps> = ({
           </div>
         </div>
       </div>
-
-      {/* Gemini API Key Modal */}
-      {showKeyModal && (
-        <div 
-          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4 pointer-events-auto"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="gemini-modal-title"
-        >
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-md w-full p-6 text-xs animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between mb-3">
-              <h4 id="gemini-modal-title" className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                <Key className="w-4 h-4 text-[#023B77]" aria-hidden="true" />
-                Google Gemini API Key
-              </h4>
-              <button 
-                onClick={() => setShowKeyModal(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer min-h-[32px] min-w-[32px] flex items-center justify-center"
-                aria-label="Close Gemini configuration modal"
-              >
-                <X className="w-4 h-4" aria-hidden="true" />
-              </button>
-            </div>
-
-            <p className="text-slate-600 mb-4 leading-relaxed">
-              Enter your Google Gemini API key to enable advanced RAG multi-turn conversational intelligence. If omitted, the platform uses its deterministic grounded synthesis engine.
-            </p>
-
-            <form onSubmit={handleSaveApiKey} className="space-y-4">
-              <div>
-                <label htmlFor="gemini-key-input" className="block font-bold text-slate-700 mb-1">Gemini API Key</label>
-                <input
-                  id="gemini-key-input"
-                  type="password"
-                  placeholder="AIzaSy..."
-                  value={tempKey}
-                  onChange={(e) => setTempKey(e.target.value)}
-                  className="w-full p-2.5 border border-slate-200 rounded-lg outline-none font-mono text-xs focus:border-[#023B77] focus:ring-1 focus:ring-[#023B77]"
-                />
-              </div>
-
-              <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setTempKey('');
-                    setGeminiApiKey('');
-                    localStorage.removeItem('gemini_api_key');
-                    setShowKeyModal(false);
-                    setSyncFeedback('Gemini API Key cleared.');
-                    setTimeout(() => setSyncFeedback(null), 3000);
-                  }}
-                  className="text-rose-600 hover:underline font-semibold cursor-pointer py-1.5"
-                >
-                  Clear Key
-                </button>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowKeyModal(false)}
-                    className="px-3.5 py-1.5 rounded-lg border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 cursor-pointer min-h-[36px]"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-1.5 rounded-lg bg-[#023B77] hover:bg-[#012d5a] text-white font-bold transition-all shadow-sm cursor-pointer min-h-[36px]"
-                  >
-                    Save Key
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
