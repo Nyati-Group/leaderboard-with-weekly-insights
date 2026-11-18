@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, status
-from sqlalchemy.orm import Session
-from sqlalchemy import text
+from app.core.database import Session
+from app.core.odm import text
 from app.core.config import settings
 from app.core.database import get_db
 from app.schemas.common import StandardResponse, ResponseMeta
@@ -23,12 +23,13 @@ def health_check():
 @router.get("/db", response_model=StandardResponse[dict])
 def health_db_check(db: Session = Depends(get_db)):
     try:
-        db.execute(text("SELECT 1"))
+        db.execute(text("ping"))
         return StandardResponse(
             success=True,
             data={
                 "status": "connected",
-                "database_url": settings.DATABASE_URL.split("@")[-1] if "@" in settings.DATABASE_URL else settings.DATABASE_URL
+                "engine": "mongodb",
+                "database": settings.MONGODB_DB_NAME
             },
             meta=ResponseMeta()
         )

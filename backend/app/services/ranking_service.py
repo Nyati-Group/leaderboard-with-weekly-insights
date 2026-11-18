@@ -1,7 +1,7 @@
 from datetime import date, datetime, timedelta, timezone
 from typing import Dict, List, Optional, Tuple, Any
-from sqlalchemy.orm import Session
-from sqlalchemy import func
+from app.core.database import Session
+from app.core.odm import func
 
 from app.models.sites import Site, ProjectBaseline, ProjectMilestone
 from app.models.operations import (

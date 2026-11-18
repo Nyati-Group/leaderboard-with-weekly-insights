@@ -1,6 +1,6 @@
 import uuid
 from typing import Optional, Dict, Any, List
-from sqlalchemy.orm import Session
+from app.core.database import Session
 from app.models.audit import AuditLog
 
 class AuditService:

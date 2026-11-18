@@ -1,8 +1,8 @@
 import uuid
-from sqlalchemy import (
+from app.core.odm import (
     Column, String, Numeric, Integer, Boolean, Text, ForeignKey, JSON, DateTime, UniqueConstraint
 )
-from sqlalchemy.orm import relationship
+from app.core.odm import relationship
 from app.core.database import Base
 from app.models.base import TimestampMixin, GUID, get_utc_now
 

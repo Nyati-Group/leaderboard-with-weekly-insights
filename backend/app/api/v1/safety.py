@@ -2,7 +2,7 @@ from typing import List, Optional
 from datetime import date
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from app.core.database import Session
 from pydantic import BaseModel, ConfigDict
 
 from app.core.database import get_db

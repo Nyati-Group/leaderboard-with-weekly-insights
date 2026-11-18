@@ -8,23 +8,18 @@ on:
 
 jobs:
   backend-test:
-    name: Backend Tests & Database Migrations
+    name: Backend Tests (MongoDB)
     runs-on: ubuntu-latest
 
     services:
-      postgres:
-        image: pgvector/pgvector:pg16
-        env:
-          POSTGRES_DB: cld_db
-          POSTGRES_USER: cld_admin
-          POSTGRES_PASSWORD: cld_secure_pass_2026
+      mongodb:
+        image: mongo:7
         ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          - 27017:27017
+
+    env:
+      MONGODB_URI: mongodb://localhost:27017
+      MONGODB_DB_NAME: cld_ci
 
     steps:
       - uses: actions/checkout@v4
@@ -39,23 +34,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
 
-      - name: Run Alembic Database Migrations
-        env:
-          DATABASE_URL: postgresql+psycopg://cld_admin:cld_secure_pass_2026@localhost:5432/cld_db
-        run: |
-          cd backend
-          alembic upgrade head
-
-      - name: Run Backend Seed Script
-        env:
-          DATABASE_URL: postgresql+psycopg://cld_admin:cld_secure_pass_2026@localhost:5432/cld_db
+      - name: Seed Database
         run: |
           cd backend
           python -m app.core.seed
 
       - name: Execute Pytest Suite
-        env:
-          DATABASE_URL: postgresql+psycopg://cld_admin:cld_secure_pass_2026@localhost:5432/cld_db
         run: |
           cd backend
           pytest

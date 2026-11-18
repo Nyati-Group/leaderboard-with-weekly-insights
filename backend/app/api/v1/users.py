@@ -1,6 +1,6 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from app.core.database import Session
 from pydantic import BaseModel, EmailStr, ConfigDict
 import uuid
 

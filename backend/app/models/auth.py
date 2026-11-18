@@ -1,6 +1,6 @@
 import uuid
-from sqlalchemy import Column, String, Boolean, ForeignKey, DateTime, Text, Table
-from sqlalchemy.orm import relationship
+from app.core.odm import Column, String, Boolean, ForeignKey, DateTime, Text, Table
+from app.core.odm import relationship
 from app.core.database import Base
 from app.models.base import TimestampMixin, GUID, get_utc_now
 

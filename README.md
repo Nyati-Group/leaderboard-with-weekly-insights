@@ -1,7 +1,7 @@
 # Construction Site Leadership Dashboard
 ## Enterprise Construction Management & Leadership Intelligence Platform
 
-**Architecture:** Modular Monolith (FastAPI + React/TypeScript + PostgreSQL + Redis)  
+**Architecture:** Modular Monolith (FastAPI + React/TypeScript + MongoDB)  
 **Primary Brand Palette:** Navy (`#023B77`), Teal (`#039583`)  
 
 ---
@@ -33,56 +33,61 @@ The Construction Site Leadership Dashboard consolidates operational progress, ex
 ### Prerequisites
 - Python 3.12+ (or 3.14)
 - Node.js 20+ & npm
-- Docker & Docker Compose (optional for local SQLite, required for full PostgreSQL/Redis stack)
+- A MongoDB database: MongoDB Atlas (recommended) or a local `mongod`
 
-### Option A: Running with Docker Compose (Recommended)
-```bash
-# Start all services (PostgreSQL with pgvector, Redis, FastAPI Backend, React Frontend)
-docker compose up -d --build
-
-# Run migrations inside the backend container
-docker compose exec backend alembic upgrade head
-
-# Seed initial roles and sites
-docker compose exec backend python -m app.core.seed
-```
-- Frontend UI: `http://localhost:3000`
-- Backend API Docs: `http://localhost:8000/api/v1/docs`
-- Health Endpoint: `http://localhost:8000/api/v1/health`
-
-### Option B: Native Local Development
-
-#### 1. Backend Setup
+### 1. Backend Setup
 ```bash
 # Activate virtual environment
 .\venv\Scripts\Activate.ps1  # Windows PowerShell
 
-# Run database migrations
 cd backend
-alembic upgrade head
+pip install -r requirements.txt
 
-# Seed 6 roles and 5 initial sites
+# Configure MongoDB: copy .env.example to .env and set MONGODB_URI / MONGODB_DB_NAME
+# (default database name: site_leaderboard_weekly_insights)
+
+# Create indexes and seed 6 roles, 5 sites, 18 accounts and sample data (idempotent)
 python -m app.core.seed
 
-# Start FastAPI dev server
-uvicorn app.main:app --reload --port 8000
+# Start FastAPI dev server (the Vite dev proxy targets port 8001)
+uvicorn app.main:app --reload --port 8001
 ```
 
-#### 2. Frontend Setup
+There are no schema migrations: collections are created on first write and
+`python -m app.core.seed` (re)creates the unique/lookup indexes.
+
+### 2. Frontend Setup
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-- Open `http://localhost:5173` in your browser.
+- Open `http://localhost:5175` in your browser.
 
 ---
 
-## 3. Running Automated Tests
+## 3. Deploying to Vercel
+
+The repository deploys as a single Vercel project (no Docker):
+- `frontend/` is built as static assets (`vercel.json` → `frontend/dist`).
+- `api/index.py` exposes the FastAPI app as a Python serverless function; every `/api/*` request is routed to it.
+
+Steps:
+1. Import the repository in Vercel (root directory = repository root; settings come from `vercel.json`).
+2. Add environment variables: `MONGODB_URI`, `MONGODB_DB_NAME`, `SECRET_KEY`, and optionally `GEMINI_API_KEY`, `GEMINI_MODEL`, `ENVIRONMENT=production`, `DEBUG=false`.
+3. In MongoDB Atlas → Network Access, allow connections from Vercel (e.g. `0.0.0.0/0`, since Vercel functions have no fixed IPs).
+4. Seed the database once from your machine: `cd backend && python -m app.core.seed`.
+
+---
+
+## 4. Running Automated Tests
+
+The backend tests run against a seeded MongoDB database. Point them at a throwaway database rather than production:
 
 ```bash
-# Run backend pytest suite (unit, integration, health, and site tests)
 cd backend
+$env:MONGODB_URI="mongodb://localhost:27017"; $env:MONGODB_DB_NAME="cld_test"
+python -m app.core.seed
 pytest
 
 # Run frontend typecheck and build
@@ -92,10 +97,10 @@ npm run build
 
 ---
 
-## 4. Phase Verification Checklist
+## 5. Phase Verification Checklist
 
 - [x] **Phase 0:** Requirements analysis, 11-domain ERD, 6-role RBAC matrix, REST API contracts, 8-KRA ranking engine formulation.
-- [x] **Phase 1:** Monorepo structure, FastAPI backend, React 19 / TypeScript frontend, Tailwind CSS v4, PostgreSQL/Alembic schema migrations, health checks, seed script, automated test suite, GitHub Actions CI.
+- [x] **Phase 1:** Monorepo structure, FastAPI backend, React 19 / TypeScript frontend, Tailwind CSS v4, MongoDB persistence layer, health checks, seed script, automated test suite, GitHub Actions CI.
 - [ ] **Phase 2:** Authentication, JWT session management, 3-tier RBAC enforcement, and user management.
 - [ ] **Phase 3:** Site portfolio management and daily field operations.
 - [ ] **Phase 4:** Quality, safety inspections, incident tracking, and corrective actions center.

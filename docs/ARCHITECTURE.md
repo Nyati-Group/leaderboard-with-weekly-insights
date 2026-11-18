@@ -3,7 +3,7 @@
 
 **Version:** 1.0  
 **Status:** Approved Phase 0 Specification  
-**Architecture:** Modular Monolith (FastAPI + React/TypeScript + PostgreSQL + Redis)  
+**Architecture:** Modular Monolith (FastAPI + React/TypeScript + MongoDB)  
 
 ---
 
@@ -38,8 +38,7 @@ The application maintains strict boundaries across 11 discrete business domains:
 
 ## 2. Infrastructure & Deployment Model
 
-- **Database**: PostgreSQL 16 with `pgvector` extension for document embeddings.
-- **Cache / Task Queue**: Redis 7.
-- **Backend**: Python 3.14 / 3.12+ with FastAPI, Pydantic v2, SQLAlchemy 2.0 (Async + Sync support), Alembic migrations.
+- **Database**: MongoDB (Atlas), accessed through a lightweight SQLAlchemy-style ODM in `backend/app/core/odm.py`.
+- **Backend**: Python 3.14 / 3.12+ with FastAPI, Pydantic v2, PyMongo.
 - **Frontend**: React 19, TypeScript, Vite, Tailwind CSS, shadcn/ui design tokens, Recharts, TanStack Query.
 - **Hybrid Gateway**: Supports cloud deployment with optional outbound-only data bridge for on-premises infrastructure.

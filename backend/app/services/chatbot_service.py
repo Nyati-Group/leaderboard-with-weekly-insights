@@ -3,8 +3,8 @@ import re
 import httpx
 from datetime import datetime, timezone, date
 from typing import Optional, Dict, Any, List, Tuple
-from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from app.core.database import Session
+from app.core.odm import or_
 
 from app.core.config import settings
 from app.core.logging import logger

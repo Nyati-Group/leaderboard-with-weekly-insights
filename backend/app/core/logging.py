@@ -16,6 +16,6 @@ def setup_logging():
     
     # Silence noisy third-party loggers
     logging.getLogger("uvicorn.access").setLevel(logging.INFO)
-    logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
+    logging.getLogger("pymongo").setLevel(logging.WARNING)
 
 logger = logging.getLogger("cld_app")

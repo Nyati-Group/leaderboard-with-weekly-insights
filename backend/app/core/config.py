@@ -26,16 +26,9 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5175",
     ]
     
-    # Database
-    DATABASE_URL: str = "sqlite:///./dev.db"  # Fallback for dev/tests, overridable by env
-    POSTGRES_SERVER: Optional[str] = "localhost"
-    POSTGRES_USER: Optional[str] = "cld_admin"
-    POSTGRES_PASSWORD: Optional[str] = "cld_secure_pass_2026"
-    POSTGRES_DB: Optional[str] = "cld_db"
-    POSTGRES_PORT: Optional[int] = 5432
-    
-    # Redis
-    REDIS_URL: str = "redis://localhost:6379/0"
+    # Database (MongoDB)
+    MONGODB_URI: str = "mongodb://localhost:27017"  # Override via MONGODB_URI env var
+    MONGODB_DB_NAME: str = "site_leaderboard_weekly_insights"
     
     # Security
     SECRET_KEY: str = "023B77_039583_cld_super_secret_jwt_key_change_in_production_min_32_chars"

@@ -4,7 +4,7 @@ from datetime import date, datetime
 from typing import Dict, Any, List
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
-from sqlalchemy.orm import Session
+from app.core.database import Session
 
 from app.models.sites import Site
 from app.models.rankings import RankingSnapshot, RankingScore

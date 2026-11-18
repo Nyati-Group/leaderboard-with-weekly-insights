@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 from typing import Optional, Dict, Any, List
-from sqlalchemy.orm import Session
+from app.core.database import Session
 from fastapi import HTTPException, status
 
 from app.models.weekly_insights import (

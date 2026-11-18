@@ -1,6 +1,7 @@
 from datetime import date, timedelta
-from sqlalchemy.orm import Session
+from app.core.database import Session
 from app.core.database import SessionLocal
+from app.core.odm import ensure_indexes
 from app.core.security import get_password_hash
 from app.models.auth import Role, Permission, User, SiteAssignment
 from app.models.sites import Site, SiteMetadata, ProjectBaseline, ProjectMilestone
@@ -259,6 +260,7 @@ DEFAULT_PASSWORD = "Construction@2026"
 
 def seed_database():
     db: Session = SessionLocal()
+    ensure_indexes(db.db)
     try:
         # 1. Seed Roles
         for role_data in ROLES_SEED:
