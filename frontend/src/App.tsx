@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { 
   Building2, 
   LayoutDashboard, 
@@ -98,6 +98,32 @@ export function App() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [activeAccountTab, setActiveAccountTab] = useState('gov');
+
+  // Sliding highlight behind the active sidebar workspace
+  const navRef = useRef<HTMLElement | null>(null);
+  const [navIndicator, setNavIndicator] = useState({ top: 0, height: 0, visible: false, animate: false });
+
+  useLayoutEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const update = () => {
+      const activeBtn = nav.querySelector<HTMLElement>(`[data-workspace="${activeWorkspace}"]`);
+      if (!activeBtn) {
+        setNavIndicator(prev => ({ ...prev, visible: false, animate: false }));
+        return;
+      }
+      // Sub-pixel exact measurements (offsetTop/offsetHeight round to whole pixels).
+      const navRect = nav.getBoundingClientRect();
+      const btnRect = activeBtn.getBoundingClientRect();
+      const top = btnRect.top - navRect.top;
+      // Only animate once the indicator has been placed; the first placement snaps into position.
+      setNavIndicator(prev => ({ top, height: btnRect.height, visible: true, animate: prev.visible }));
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(nav);
+    return () => observer.disconnect();
+  }, [activeWorkspace, currentUser]);
 
   // Initialize Session
   useEffect(() => {
@@ -322,7 +348,16 @@ export function App() {
           <p className="px-3 py-2 text-[11px] font-semibold tracking-wider uppercase text-blue-200/60">
             Workspaces
           </p>
-          <nav className="space-y-1">
+          <nav ref={navRef} className="relative space-y-1">
+            <span
+              aria-hidden="true"
+              className={`pointer-events-none absolute inset-x-0 top-0 rounded-xl bg-white/15 border border-white/20 shadow-sm will-change-transform ${
+                navIndicator.animate
+                  ? 'transition-[transform,height,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none'
+                  : ''
+              } ${navIndicator.visible ? 'opacity-100' : 'opacity-0'}`}
+              style={{ transform: `translateY(${navIndicator.top}px)`, height: navIndicator.height }}
+            />
             {WORKSPACES.map((ws) => {
               const Icon = ws.icon;
               const isActive = activeWorkspace === ws.id;
@@ -331,18 +366,20 @@ export function App() {
               return (
                 <button
                   key={ws.id}
+                  data-workspace={ws.id}
+                  aria-current={isActive ? 'page' : undefined}
                   disabled={!isPermitted}
                   onClick={() => setActiveWorkspace(ws.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all text-left group active:scale-[0.98] ${
+                  className={`relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent text-xs font-semibold transition-[color,background-color,transform] duration-200 ease-out motion-reduce:transition-none text-left group active:scale-[0.98] ${
                     isActive
-                      ? 'bg-white/15 text-white shadow-sm backdrop-blur-md border border-white/20'
+                      ? 'text-white'
                       : isPermitted
                         ? 'text-blue-100 hover:bg-white/10 hover:text-white'
                         : 'text-blue-300/30 cursor-not-allowed opacity-40'
                   }`}
                   title={!isPermitted ? 'Access restricted by your organizational role policy' : undefined}
                 >
-                  <Icon className={`w-4 h-4 transition-transform group-hover:scale-105 ${
+                  <Icon className={`w-4 h-4 transition-[color,transform] duration-200 ease-out group-hover:scale-105 ${
                     isActive ? 'text-teal-300' : isPermitted ? 'text-blue-200' : 'text-blue-300/30'
                   }`} />
                   <span className="truncate">{ws.name}</span>
