@@ -20,6 +20,15 @@ from app.schemas.common import StandardResponse, ResponseMeta
 
 router = APIRouter(prefix="/daily-reports", tags=["Daily Field Operations"])
 
+# Maker-checker separation for daily field reports:
+#   * Authors record and submit reports. Executive Leadership is read-only, and
+#     Safety/Quality Officers log their findings in their own modules instead.
+#   * Only Project Controllers review (flag/validate). Organization Admins do not
+#     review operational content, mirroring the weekly report governance rule.
+#   * Nobody may validate a report version they submitted themselves.
+DAILY_REPORT_AUTHOR_ROLES = ("SITE_MANAGER", "PROJECT_CONTROLLER", "ORG_ADMIN")
+DAILY_REPORT_REVIEWER_ROLES = ("PROJECT_CONTROLLER",)
+
 # --- Schemas ---
 
 class ProgressItemInput(BaseModel):
@@ -154,7 +163,7 @@ def list_daily_reports(
 def create_or_save_draft_daily_report(
     payload: DailyReportCreateOrUpdateRequest,
     db: Session = Depends(get_db),
-    current_user: AuthenticatedUserContext = Depends(get_current_user)
+    current_user: AuthenticatedUserContext = Depends(require_roles(*DAILY_REPORT_AUTHOR_ROLES))
 ):
     # Verify site authorization
     if not current_user.can_access_site(payload.site_id):
@@ -279,7 +288,7 @@ def get_daily_report_detail(
 def submit_daily_report(
     report_id: str,
     db: Session = Depends(get_db),
-    current_user: AuthenticatedUserContext = Depends(get_current_user)
+    current_user: AuthenticatedUserContext = Depends(require_roles(*DAILY_REPORT_AUTHOR_ROLES))
 ):
     report = db.query(DailyReport).filter(DailyReport.id == report_id).first()
     if not report:
@@ -321,11 +330,14 @@ def flag_daily_report_discrepancy(
     report_id: str,
     payload: FlagReportRequest,
     db: Session = Depends(get_db),
-    current_user: AuthenticatedUserContext = Depends(require_roles("PROJECT_CONTROLLER", "ORG_ADMIN"))
+    current_user: AuthenticatedUserContext = Depends(require_roles(*DAILY_REPORT_REVIEWER_ROLES))
 ):
     report = db.query(DailyReport).filter(DailyReport.id == report_id).first()
     if not report:
         raise HTTPException(status_code=404, detail="Daily report not found.")
+
+    if not current_user.can_access_site(report.site_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cross-site access denied.")
 
     if report.status != "SUBMITTED":
         raise HTTPException(status_code=400, detail="Only submitted reports can be flagged for correction.")
@@ -347,14 +359,24 @@ def flag_daily_report_discrepancy(
 def validate_daily_report(
     report_id: str,
     db: Session = Depends(get_db),
-    current_user: AuthenticatedUserContext = Depends(require_roles("PROJECT_CONTROLLER", "ORG_ADMIN"))
+    current_user: AuthenticatedUserContext = Depends(require_roles(*DAILY_REPORT_REVIEWER_ROLES))
 ):
     report = db.query(DailyReport).filter(DailyReport.id == report_id).first()
     if not report:
         raise HTTPException(status_code=404, detail="Daily report not found.")
 
+    if not current_user.can_access_site(report.site_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cross-site access denied.")
+
     if report.status != "SUBMITTED":
         raise HTTPException(status_code=400, detail="Only submitted reports can be validated.")
+
+    if report.submitted_by is not None and str(report.submitted_by) == str(current_user.id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Segregation of duties: you cannot validate a daily report you submitted. "
+                   "Another Project Controller must validate it."
+        )
 
     report.status = "VALIDATED"
     report.validated_by = current_user.id

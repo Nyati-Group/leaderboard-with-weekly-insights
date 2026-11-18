@@ -3,7 +3,7 @@ from app.core.database import Session
 from app.core.database import SessionLocal
 from app.core.odm import ensure_indexes
 from app.core.security import get_password_hash
-from app.models.auth import Role, Permission, User, SiteAssignment
+from app.models.auth import Role, User, SiteAssignment
 from app.models.sites import Site, SiteMetadata, ProjectBaseline, ProjectMilestone
 from app.models.operations import (
     DailyReport,

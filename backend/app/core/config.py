@@ -4,7 +4,7 @@ from pydantic import AnyHttpUrl, field_validator
 
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "Construction Site Leadership Dashboard"
+    PROJECT_NAME: str = "Nyati Leaderboard & Insights"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
     

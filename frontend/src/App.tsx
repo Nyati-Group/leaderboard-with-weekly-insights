@@ -1,6 +1,5 @@
 import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { 
-  Building2, 
   LayoutDashboard, 
   Trophy, 
   CalendarDays, 
@@ -212,12 +211,12 @@ export function App() {
           
           {/* Brand Header */}
           <div className="flex items-center gap-3.5 mb-6">
-            <div className="bg-gradient-to-br from-[#023B77] to-[#039583] p-3 rounded-2xl shadow-md border border-white/10">
-              <Building2 className="w-7 h-7 text-white" />
+            <div className="bg-white p-2 rounded-2xl shadow-md border border-white/10 shrink-0">
+              <img src="/nyati-mark.png" alt="Nyati" width={40} height={40} className="w-10 h-10 block" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white tracking-tight">Construction Site Leadership</h1>
-              <p className="text-xs text-slate-400">Enterprise Multi-Site Operations & Intelligence</p>
+              <h1 className="text-xl font-bold text-white tracking-tight">Leaderboard & Insights</h1>
+              <p className="text-xs text-slate-400">Nyati Group · Multi-Site Operations Intelligence</p>
             </div>
           </div>
 
@@ -334,12 +333,12 @@ export function App() {
         
         {/* Brand Header */}
         <div className="p-4 border-b border-white/10 flex items-center gap-3">
-          <div className="bg-gradient-to-br from-[#039583] to-[#027466] p-2 rounded-xl shadow-md border border-white/15">
-            <Building2 className="w-5 h-5 text-white" />
+          <div className="bg-white p-1.5 rounded-xl shadow-md border border-white/15 shrink-0">
+            <img src="/nyati-mark.png" alt="Nyati" width={28} height={28} className="w-7 h-7 block" />
           </div>
-          <div>
-            <h1 className="font-bold text-sm tracking-tight leading-tight text-white">Construction Leadership</h1>
-            <p className="text-[11px] text-teal-200/80 font-mono">Platform v1.0</p>
+          <div className="min-w-0">
+            <h1 className="font-bold text-sm tracking-tight leading-tight text-white truncate">Leaderboard & Insights</h1>
+            <p className="text-[11px] text-teal-200/80 font-medium">Nyati Group</p>
           </div>
         </div>
 

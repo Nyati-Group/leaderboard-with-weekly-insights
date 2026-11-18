@@ -143,3 +143,61 @@ def test_daily_report_lifecycle_and_governance():
     assert len(versions) == 2
     assert versions[0]["version_number"] == 2
     assert versions[1]["version_number"] == 1
+
+
+def _delete_daily_report(site_id: str, reporting_date: date):
+    from app.core.database import SessionLocal
+    from app.models.operations import DailyReport
+
+    db = SessionLocal()
+    existing = db.query(DailyReport).filter(
+        DailyReport.site_id == site_id,
+        DailyReport.reporting_date == reporting_date
+    ).first()
+    if existing:
+        db.delete(existing)
+        db.commit()
+    db.close()
+
+
+def test_daily_report_role_separation():
+    """Read-only and domain-officer roles cannot author daily reports; only Controllers review,
+    and nobody validates a report they submitted themselves."""
+    test_date = date(2026, 10, 21)
+    _delete_daily_report("CS-PUN-01", test_date)
+
+    payload = {"site_id": "CS-PUN-01", "reporting_date": str(test_date), "progress_records": []}
+    auth = lambda email: {"Authorization": f"Bearer {get_token(email)}"}
+
+    # Executive Leadership is read-only, even though it can see every site
+    exec_res = client.post("/api/v1/daily-reports", json=payload, headers=auth("leadership@cld.com"))
+    assert exec_res.status_code == 403
+
+    # Safety and Quality Officers record findings in their own modules, not daily reports
+    assert client.post("/api/v1/daily-reports", json=payload, headers=auth("safety.pune@cld.com")).status_code == 403
+    assert client.post("/api/v1/daily-reports", json=payload, headers=auth("quality.pune@cld.com")).status_code == 403
+
+    # Site Manager authors the report; officers cannot submit it on their behalf
+    create_res = client.post("/api/v1/daily-reports", json=payload, headers=auth("pm.pune@cld.com"))
+    assert create_res.status_code == 201
+    report_id = create_res.json()["data"]["id"]
+    assert client.post(f"/api/v1/daily-reports/{report_id}/submit", headers=auth("quality.pune@cld.com")).status_code == 403
+    assert client.post(f"/api/v1/daily-reports/{report_id}/submit", headers=auth("pm.pune@cld.com")).status_code == 200
+
+    # Organization Admins do not review operational content (same rule as weekly reports)
+    admin = auth("admin@cld.com")
+    assert client.post(f"/api/v1/daily-reports/{report_id}/validate", headers=admin).status_code == 403
+    assert client.post(f"/api/v1/daily-reports/{report_id}/flag", json={"flagged_reason": "x"}, headers=admin).status_code == 403
+
+    # A Controller cannot validate a report they submitted themselves
+    controller = auth("controller@cld.com")
+    _delete_daily_report("CS-PUN-01", test_date)
+    own = client.post("/api/v1/daily-reports", json=payload, headers=controller)
+    assert own.status_code == 201
+    own_id = own.json()["data"]["id"]
+    assert client.post(f"/api/v1/daily-reports/{own_id}/submit", headers=controller).status_code == 200
+    self_validate = client.post(f"/api/v1/daily-reports/{own_id}/validate", headers=controller)
+    assert self_validate.status_code == 403
+    assert "Segregation of duties" in self_validate.json()["detail"]
+
+    _delete_daily_report("CS-PUN-01", test_date)

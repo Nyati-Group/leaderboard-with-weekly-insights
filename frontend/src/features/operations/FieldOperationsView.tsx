@@ -175,12 +175,12 @@ export const FieldOperationsView: React.FC<FieldOperationsViewProps> = ({ siteId
     }
   };
 
-  // Permission check: Site Managers, Org Admins, Project Controllers can log daily field records
+  // Permission check (mirrors backend DAILY_REPORT_AUTHOR_ROLES): Site Managers, Org Admins and
+  // Project Controllers can log daily field records. Executive Leadership is read-only.
   const userRoles = currentUser?.roles || [];
-  const canCreateReport = userRoles.includes('SITE_MANAGER') || 
-                          userRoles.includes('ORG_ADMIN') || 
-                          userRoles.includes('PROJECT_CONTROLLER') ||
-                          currentUser?.has_global_scope;
+  const canCreateReport = userRoles.includes('SITE_MANAGER') ||
+                          userRoles.includes('ORG_ADMIN') ||
+                          userRoles.includes('PROJECT_CONTROLLER');
 
   const canEdit = reportDetail && (reportDetail.status === 'DRAFT' || reportDetail.status === 'FLAGGED');
 
